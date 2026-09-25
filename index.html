@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anabiya Craft & Art</title>
+<style>
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background:#f7f7fb; color:#222; }
+  .banner { width:100%; max-height:320px; overflow:hidden; display:none; background:#eee; position:relative; }
+  .banner-track { display:flex; transition:transform 0.5s ease; }
+  .banner-track img { width:100%; flex-shrink:0; max-height:320px; object-fit:cover; display:block; }
+  .banner-dots { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:6px; }
+  .banner-dots span { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.6); }
+  .banner-dots span.active { background:#fff; }
+  .shop-name { text-align:center; margin-top:20px; }
+  .shop-name .main { font-size:34px; font-weight:bold; color:#2d2e83; letter-spacing:0.5px; display:block; }
+  .shop-name .sub { font-size:14px; font-weight:600; color:#555; letter-spacing:2px; text-transform:uppercase; display:block; margin-top:2px; }
+  .section-title { font-size:18px; font-weight:bold; margin:20px 0 14px; color:#2d2e83; border-left:4px solid #2d2e83; padding-left:10px; }
+  .container { max-width:1100px; margin:0 auto; padding:20px; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap:16px; }
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: repeat(2, 1fr); gap:10px; }
+    .card img { height:120px; }
+    .card-body { padding:8px; }
+    .card-body h3 { font-size:13px; }
+    .card-body p { font-size:11px; -webkit-line-clamp:2; display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden; }
+    .price { font-size:13px; margin-bottom:6px; }
+    button { font-size:12px; padding:7px; }
+  }
+  .card { background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.1); display:flex; flex-direction:column; }
+  .card img { width:100%; height:150px; object-fit:cover; background:#eee; cursor:zoom-in; }
+  .card-body { padding:10px; flex:1; display:flex; flex-direction:column; }
+  .card-body h3 { font-size:15px; margin-bottom:6px; }
+  .price { color:#2d2e83; font-weight:bold; margin-bottom:8px; }
+  .card-body p { font-size:13px; color:#555; flex:1; margin-bottom:8px; }
+  button { background:#2d2e83; color:#fff; border:none; padding:9px; border-radius:6px; cursor:pointer; font-size:14px; }
+  button:hover { background:#1f2060; }
+  .empty { text-align:center; padding:40px; color:#888; }
+
+  .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:100; padding:16px; }
+  .modal { background:#fff; border-radius:10px; padding:20px; max-width:440px; width:100%; max-height:90vh; overflow-y:auto; }
+  .modal h2 { margin-bottom:14px; font-size:18px; }
+  .modal label { display:block; font-size:13px; margin:10px 0 4px; }
+  .modal input, .modal textarea { width:100%; padding:9px; border:1px solid #ccc; border-radius:6px; font-size:14px; }
+  .modal-actions { display:flex; gap:10px; margin-top:16px; }
+  .modal-actions button.secondary { background:#aaa; }
+  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#28a745; color:#fff; padding:12px 20px; border-radius:8px; display:none; z-index:200; }
+  footer { text-align:center; padding:20px; color:#888; font-size:12px; }
+
+  .about-section { background:#fff; margin-top:10px; padding:32px 20px; }
+  .about-section .section-title { max-width:1100px; margin:0 auto 14px; }
+  .about-box { max-width:700px; margin:0 auto; text-align:center; }
+  .about-box p { line-height:1.7; color:#444; font-size:14px; white-space:pre-line; }
+  .social-row { display:flex; justify-content:center; gap:14px; margin-top:18px; }
+  .social-row a { width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:18px; text-decoration:none; }
+  .social-row a.fb { background:#1877F2; }
+  .social-row a.wa { background:#25D366; }
+
+  .lightbox-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:300; align-items:center; justify-content:center; padding:16px; }
+  .lightbox-bg.active { display:flex; }
+  .lightbox-box { background:#fff; border-radius:10px; padding:16px; max-width:480px; width:100%; max-height:90vh; overflow-y:auto; position:relative; }
+  .lightbox-main { position:relative; display:flex; align-items:center; justify-content:center; background:#f7f7fb; border-radius:8px; overflow:hidden; }
+  .lightbox-main img { max-width:100%; max-height:60vh; width:auto; height:auto; object-fit:contain; }
+  .lightbox-nav { position:absolute; top:50%; transform:translateY(-50%); background:rgba(45,46,131,0.7); color:#fff; border:none; width:38px; height:38px; border-radius:50%; font-size:20px; cursor:pointer; }
+  #lbPrev { left:10px; }
+  #lbNext { right:10px; }
+  .lightbox-close { position:absolute; top:8px; right:10px; background:none; color:#888; font-size:26px; border:none; cursor:pointer; z-index:2; }
+  .lightbox-thumbs { display:flex; gap:8px; padding-top:12px; overflow-x:auto; }
+  .lightbox-thumbs img { width:50px; height:50px; object-fit:cover; border-radius:6px; opacity:0.5; cursor:pointer; flex-shrink:0; }
+  .lightbox-thumbs img.active { opacity:1; outline:2px solid #2d2e83; }
+
+  .cart-fab { position:fixed; bottom:20px; right:20px; width:56px; height:56px; border-radius:50%; background:#2d2e83; color:#fff; font-size:22px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.3); z-index:150; padding:0; }
+  .whatsapp-fab { position:fixed; bottom:20px; left:20px; width:56px; height:56px; border-radius:50%; background:#25D366; color:#fff; font-size:26px; display:none; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.3); z-index:150; text-decoration:none; }
+  .cart-badge { position:absolute; top:-4px; right:-4px; background:#c0392b; color:#fff; font-size:11px; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; }
+  .cart-item { display:flex; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid #eee; }
+  .cart-item img { width:50px; height:50px; object-fit:cover; border-radius:6px; flex-shrink:0; }
+  .cart-item-info { flex:1; }
+  .cart-item-info h4 { font-size:13px; margin-bottom:2px; }
+  .qty-control { display:flex; align-items:center; gap:8px; }
+  .qty-control button { width:26px; height:26px; padding:0; font-size:14px; }
+  .cart-remove { background:none; color:#c0392b; font-size:12px; padding:2px; }
+  .summary-row { display:flex; justify-content:space-between; font-size:13px; padding:3px 0; }
+  .summary-row.total { font-weight:bold; border-top:1px solid #ddd; margin-top:6px; padding-top:6px; }
+
+  @keyframes revealUp {
+    from { opacity:0; transform:translateY(22px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  @keyframes revealPop {
+    from { opacity:0; transform:scale(0.7); }
+    to   { opacity:1; transform:scale(1); }
+  }
+  .banner, .shop-name, .section-title, .card, .about-section, footer {
+    animation: revealUp 0.6s ease both;
+  }
+  .shop-name { animation-delay: 0.1s; }
+  .section-title { animation-delay: 0.2s; }
+  .cart-fab, .whatsapp-fab {
+    animation: revealPop 0.5s ease both;
+    animation-delay: 0.3s;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .banner, .shop-name, .section-title, .card, .about-section, footer, .cart-fab, .whatsapp-fab {
+      animation: none !important;
+    }
+  }
+</style>
+
+<!-- Meta (Facebook) Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', 'YOUR_PIXEL_ID'); // ⚠️ এখানে আপনার Meta Pixel ID বসান
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
+
+</head>
+<body>
+
+<div class="banner" id="bannerWrap">
+  <div class="banner-track" id="bannerTrack"></div>
+  <div class="banner-dots" id="bannerDots"></div>
+</div>
+
+<div class="container">
+  <div class="shop-name">
+    <span class="main">🧵 Anabiya</span>
+    <span class="sub">Craft & Art</span>
+  </div>
+  <div class="section-title">আমাদের পণ্যসমূহ</div>
+  <div id="productGrid" class="grid"></div>
+  <div id="emptyMsg" class="empty" style="display:none;">এখনো কোনো পণ্য যোগ করা হয়নি।</div>
+</div>
+
+<div class="about-section" id="aboutSection" style="display:none;">
+  <div class="section-title">আমাদের সম্পর্কে</div>
+  <div class="about-box">
+    <p id="aboutText"></p>
+    <div class="social-row" id="socialRow"></div>
+  </div>
+</div>
+
+<footer>© Anabiya Craft & Art</footer>
+
+<button class="cart-fab" onclick="openCart()">🛒<span class="cart-badge" id="cartBadge" style="display:none;">0</span></button>
+<a class="whatsapp-fab" id="whatsappFab" href="#" target="_blank" rel="noopener">💬</a>
+
+<!-- Cart Modal -->
+<div class="modal-bg" id="cartModalBg">
+  <div class="modal">
+    <h2>আপনার কার্ট</h2>
+    <div id="cartItemsList"></div>
+    <div id="cartEmpty" style="display:none;color:#888;text-align:center;padding:20px 0;">কার্ট খালি আছে।</div>
+    <div id="cartSummary" style="margin-top:10px;background:#f7f7fb;border-radius:8px;padding:10px;">
+      <div class="summary-row"><span>পণ্যের মূল্য</span><span id="cartSumProducts"></span></div>
+      <div class="summary-row"><span>ডেলিভারি চার্জ</span><span id="cartSumDelivery"></span></div>
+      <div class="summary-row total"><span>সর্বমোট</span><span id="cartSumTotal"></span></div>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeCart()">বন্ধ করুন</button>
+      <button id="checkoutBtn" onclick="goToCheckout()">চেকআউট করুন</button>
+    </div>
+  </div>
+</div>
+
+<!-- Checkout Modal -->
+<div class="modal-bg" id="checkoutModalBg">
+  <div class="modal">
+    <h2>অর্ডার সম্পন্ন করুন</h2>
+    <label>আপনার নাম</label>
+    <input type="text" id="custName" placeholder="নাম লিখুন">
+    <label>মোবাইল নম্বর</label>
+    <input type="text" id="custPhone" placeholder="01XXXXXXXXX">
+    <label>ঠিকানা</label>
+    <textarea id="custAddress" rows="3" placeholder="সম্পূর্ণ ঠিকানা লিখুন"></textarea>
+    <div id="checkoutSummary" style="margin-top:10px;background:#f7f7fb;border-radius:8px;padding:10px;">
+      <div class="summary-row"><span>পণ্যের মূল্য</span><span id="coSumProducts"></span></div>
+      <div class="summary-row"><span>ডেলিভারি চার্জ</span><span id="coSumDelivery"></span></div>
+      <div class="summary-row total"><span>সর্বমোট</span><span id="coSumTotal"></span></div>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="backToCart()">পিছনে যান</button>
+      <button onclick="submitOrder()">অর্ডার নিশ্চিত করুন</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">অর্ডার সফলভাবে জমা হয়েছে!</div>
+
+<!-- Image Lightbox -->
+<div class="lightbox-bg" id="lightboxBg">
+  <div class="lightbox-box">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+    <div class="lightbox-main">
+      <button class="lightbox-nav" id="lbPrev" onclick="lbNav(-1)">‹</button>
+      <img id="lbImage" src="">
+      <button class="lightbox-nav" id="lbNext" onclick="lbNav(1)">›</button>
+    </div>
+    <div class="lightbox-thumbs" id="lbThumbs"></div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  // ⚠️ এখানে আপনার Firebase কনফিগ বসান (Firebase Console > Project Settings)
+  const firebaseConfig = {
+    apiKey: "AIzaSyAdJH1iWcLLe0fA8xAuZkONvR4wT7SQnqI",
+    authDomain: "adda-a955e.firebaseapp.com",
+    projectId: "adda-a955e",
+    storageBucket: "adda-a955e.firebasestorage.app",
+    messagingSenderId: "890300577950",
+    appId: "1:890300577950:web:7567c5bf56309a1f31e38f"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  let bannerIndex = 0;
+  let bannerTimer = null;
+
+  function loadBanner() {
+    db.collection('banners').orderBy('createdAt', 'desc').onSnapshot(snap => {
+      const wrap = document.getElementById('bannerWrap');
+      const track = document.getElementById('bannerTrack');
+      const dots = document.getElementById('bannerDots');
+      if (snap.empty) { wrap.style.display = 'none'; if (bannerTimer) clearInterval(bannerTimer); return; }
+
+      track.innerHTML = '';
+      dots.innerHTML = '';
+      let i = 0;
+      snap.forEach(doc => {
+        const img = document.createElement('img');
+        img.src = doc.data().image;
+        track.appendChild(img);
+        const dot = document.createElement('span');
+        if (i === 0) dot.className = 'active';
+        dots.appendChild(dot);
+        i++;
+      });
+      wrap.style.display = 'block';
+      bannerIndex = 0;
+      updateBannerPosition();
+
+      if (bannerTimer) clearInterval(bannerTimer);
+      if (snap.size > 1) {
+        bannerTimer = setInterval(() => {
+          bannerIndex = (bannerIndex + 1) % snap.size;
+          updateBannerPosition();
+        }, 4000);
+      }
+    });
+  }
+
+  function updateBannerPosition() {
+    const track = document.getElementById('bannerTrack');
+    track.style.transform = `translateX(-${bannerIndex * 100}%)`;
+    document.querySelectorAll('#bannerDots span').forEach((d, idx) => {
+      d.classList.toggle('active', idx === bannerIndex);
+    });
+  }
+
+  function loadProducts() {
+    db.collection('products').orderBy('createdAt', 'desc').onSnapshot(snap => {
+      const grid = document.getElementById('productGrid');
+      const emptyMsg = document.getElementById('emptyMsg');
+      grid.innerHTML = '';
+      if (snap.empty) { emptyMsg.style.display = 'block'; return; }
+      emptyMsg.style.display = 'none';
+      let cardIndex = 0;
+      snap.forEach(doc => {
+        const p = doc.data();
+        const images = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
+        const thumb = images[0] || 'https://via.placeholder.com/300x200?text=No+Image';
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.animationDelay = (cardIndex * 0.07) + 's';
+        card.innerHTML = `
+          <img src="${thumb}" alt="${p.name}" onclick='openLightbox(${JSON.stringify(images)}, 0)'>
+          <div class="card-body">
+            <h3>${p.name}</h3>
+            <div class="price">৳ ${p.price}</div>
+            <p>${p.description || ''}</p>
+            <button onclick='addToCart(${JSON.stringify(doc.id)}, ${JSON.stringify(p.name)}, ${JSON.stringify(p.price)}, ${JSON.stringify(thumb)})'>কার্টে যোগ করুন</button>
+          </div>`;
+        grid.appendChild(card);
+        cardIndex++;
+      });
+    });
+  }
+
+  // ---------- Lightbox ----------
+  let lbImages = [];
+  let lbIndex = 0;
+
+  function openLightbox(images, startIndex) {
+    if (!images || !images.length) return;
+    lbImages = images;
+    lbIndex = startIndex || 0;
+    renderLightbox();
+    document.getElementById('lightboxBg').classList.add('active');
+  }
+
+  function renderLightbox() {
+    document.getElementById('lbImage').src = lbImages[lbIndex];
+    const showNav = lbImages.length > 1;
+    document.getElementById('lbPrev').style.display = showNav ? 'block' : 'none';
+    document.getElementById('lbNext').style.display = showNav ? 'block' : 'none';
+    const thumbs = document.getElementById('lbThumbs');
+    thumbs.innerHTML = '';
+    if (showNav) {
+      lbImages.forEach((img, i) => {
+        const t = document.createElement('img');
+        t.src = img;
+        if (i === lbIndex) t.className = 'active';
+        t.onclick = () => { lbIndex = i; renderLightbox(); };
+        thumbs.appendChild(t);
+      });
+    }
+  }
+
+  function lbNav(dir) {
+    lbIndex = (lbIndex + dir + lbImages.length) % lbImages.length;
+    renderLightbox();
+  }
+
+  function closeLightbox() {
+    document.getElementById('lightboxBg').classList.remove('active');
+  }
+
+  // ---------- Cart ----------
+  const DELIVERY_FIRST = 130;
+  const DELIVERY_EXTRA = 20;
+
+  let cart = [];
+
+  function calcDelivery(totalQty) {
+    if (totalQty <= 0) return 0;
+    return DELIVERY_FIRST + (totalQty - 1) * DELIVERY_EXTRA;
+  }
+
+  function cartTotals() {
+    const totalQty = cart.reduce((s, i) => s + i.qty, 0);
+    const productTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+    const delivery = calcDelivery(totalQty);
+    return { totalQty, productTotal, delivery, grandTotal: productTotal + delivery };
+  }
+
+  function updateCartBadge() {
+    const badge = document.getElementById('cartBadge');
+    const count = cart.reduce((s, i) => s + i.qty, 0);
+    if (count > 0) { badge.style.display = 'flex'; badge.textContent = count; }
+    else badge.style.display = 'none';
+  }
+
+  function addToCart(id, name, price, image) {
+    const existing = cart.find(i => i.id === id);
+    if (existing) existing.qty++;
+    else cart.push({ id, name, price, image, qty: 1 });
+    updateCartBadge();
+
+    // Meta Pixel: AddToCart event
+    if (typeof fbq === 'function') {
+      fbq('track', 'AddToCart', {
+        content_ids: [id],
+        content_name: name,
+        content_type: 'product',
+        value: price,
+        currency: 'BDT'
+      });
+    }
+
+    const toast = document.getElementById('toast');
+    toast.textContent = name + ' কার্টে যোগ হয়েছে';
+    toast.style.display = 'block';
+    setTimeout(() => toast.style.display = 'none', 1500);
+  }
+
+  function changeQty(id, delta) {
+    const item = cart.find(i => i.id === id);
+    if (!item) return;
+    item.qty += delta;
+    if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+    updateCartBadge();
+    renderCart();
+  }
+
+  function removeFromCart(id) {
+    cart = cart.filter(i => i.id !== id);
+    updateCartBadge();
+    renderCart();
+  }
+
+  function renderCart() {
+    const list = document.getElementById('cartItemsList');
+    const empty = document.getElementById('cartEmpty');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    list.innerHTML = '';
+    if (!cart.length) {
+      empty.style.display = 'block';
+      document.getElementById('cartSummary').style.display = 'none';
+      checkoutBtn.style.display = 'none';
+      return;
+    }
+    empty.style.display = 'none';
+    document.getElementById('cartSummary').style.display = 'block';
+    checkoutBtn.style.display = 'block';
+
+    cart.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'cart-item';
+      row.innerHTML = `
+        <img src="${item.image}">
+        <div class="cart-item-info">
+          <h4>${item.name}</h4>
+          <div>৳${item.price}</div>
+          <div class="qty-control">
+            <button onclick="changeQty('${item.id}', -1)">−</button>
+            <span>${item.qty}</span>
+            <button onclick="changeQty('${item.id}', 1)">+</button>
+            <button class="cart-remove" onclick="removeFromCart('${item.id}')">মুছুন</button>
+          </div>
+        </div>`;
+      list.appendChild(row);
+    });
+
+    const t = cartTotals();
+    document.getElementById('cartSumProducts').textContent = '৳' + t.productTotal;
+    document.getElementById('cartSumDelivery').textContent = '৳' + t.delivery;
+    document.getElementById('cartSumTotal').textContent = '৳' + t.grandTotal;
+  }
+
+  function openCart() {
+    renderCart();
+    document.getElementById('cartModalBg').style.display = 'flex';
+  }
+
+  function closeCart() {
+    document.getElementById('cartModalBg').style.display = 'none';
+  }
+
+  function goToCheckout() {
+    if (!cart.length) return;
+    closeCart();
+    const t = cartTotals();
+    document.getElementById('coSumProducts').textContent = '৳' + t.productTotal;
+    document.getElementById('coSumDelivery').textContent = '৳' + t.delivery;
+    document.getElementById('coSumTotal').textContent = '৳' + t.grandTotal;
+    document.getElementById('checkoutModalBg').style.display = 'flex';
+
+    // Meta Pixel: InitiateCheckout event
+    if (typeof fbq === 'function') {
+      fbq('track', 'InitiateCheckout', {
+        content_ids: cart.map(i => i.id),
+        contents: cart.map(i => ({ id: i.id, quantity: i.qty })),
+        value: t.grandTotal,
+        currency: 'BDT',
+        num_items: t.totalQty
+      });
+    }
+  }
+
+  function backToCart() {
+    document.getElementById('checkoutModalBg').style.display = 'none';
+    openCart();
+  }
+
+  function submitOrder() {
+    const name = document.getElementById('custName').value.trim();
+    const phone = document.getElementById('custPhone').value.trim();
+    const address = document.getElementById('custAddress').value.trim();
+
+    if (!name || !phone || !address) {
+      alert('অনুগ্রহ করে সব তথ্য পূরণ করুন।');
+      return;
+    }
+    if (!cart.length) return;
+
+    const t = cartTotals();
+    const items = cart.map(i => ({ productId: i.id, productName: i.name, price: i.price, quantity: i.qty, image: i.image }));
+
+    db.collection('orders').add({
+      items: items,
+      productName: items.map(i => i.productName + ' x' + i.quantity).join(', '),
+      quantity: t.totalQty,
+      deliveryCharge: t.delivery,
+      totalAmount: t.grandTotal,
+      customerName: name,
+      customerPhone: phone,
+      customerAddress: address,
+      status: 'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      // Meta Pixel: Purchase event
+      if (typeof fbq === 'function') {
+        fbq('track', 'Purchase', {
+          content_ids: items.map(i => i.productId),
+          contents: items.map(i => ({ id: i.productId, quantity: i.quantity })),
+          value: t.grandTotal,
+          currency: 'BDT',
+          num_items: t.totalQty
+        });
+      }
+
+      document.getElementById('checkoutModalBg').style.display = 'none';
+      cart = [];
+      updateCartBadge();
+      document.getElementById('custName').value = '';
+      document.getElementById('custPhone').value = '';
+      document.getElementById('custAddress').value = '';
+      const toast = document.getElementById('toast');
+      toast.textContent = 'অর্ডার সফলভাবে জমা হয়েছে!';
+      toast.style.display = 'block';
+      setTimeout(() => toast.style.display = 'none', 2500);
+    }).catch(err => alert('ত্রুটি হয়েছে: ' + err.message));
+  }
+
+  let aboutHasText = false;
+  let aboutHasSocial = false;
+  function refreshAboutVisibility() {
+    document.getElementById('aboutSection').style.display = (aboutHasText || aboutHasSocial) ? 'block' : 'none';
+  }
+
+  function loadAbout() {
+    db.collection('settings').doc('about').onSnapshot(doc => {
+      const el = document.getElementById('aboutText');
+      if (doc.exists && doc.data().text) {
+        el.textContent = doc.data().text;
+        el.style.display = 'block';
+        aboutHasText = true;
+      } else {
+        el.style.display = 'none';
+        aboutHasText = false;
+      }
+      refreshAboutVisibility();
+    });
+  }
+
+  function loadWhatsapp() {
+    db.collection('settings').doc('contact').onSnapshot(doc => {
+      const fab = document.getElementById('whatsappFab');
+      const social = document.getElementById('socialRow');
+      social.innerHTML = '';
+      const data = doc.exists ? doc.data() : {};
+      aboutHasSocial = false;
+
+      if (data.whatsapp) {
+        const number = data.whatsapp.replace(/[^0-9]/g, '');
+        fab.href = 'https://wa.me/' + number;
+        fab.style.display = 'flex';
+        const waIcon = document.createElement('a');
+        waIcon.className = 'wa';
+        waIcon.href = 'https://wa.me/' + number;
+        waIcon.target = '_blank';
+        waIcon.rel = 'noopener';
+        waIcon.textContent = '💬';
+        social.appendChild(waIcon);
+        aboutHasSocial = true;
+      } else {
+        fab.style.display = 'none';
+      }
+
+      if (data.facebook) {
+        let fbUrl = data.facebook.trim();
+        if (!/^https?:\/\//i.test(fbUrl)) fbUrl = 'https://' + fbUrl;
+        const fbIcon = document.createElement('a');
+        fbIcon.className = 'fb';
+        fbIcon.href = fbUrl;
+        fbIcon.target = '_blank';
+        fbIcon.rel = 'noopener';
+        fbIcon.textContent = 'f';
+        fbIcon.style.fontWeight = 'bold';
+        fbIcon.style.fontSize = '20px';
+        social.appendChild(fbIcon);
+        aboutHasSocial = true;
+      }
+      refreshAboutVisibility();
+    });
+  }
+
+  loadBanner();
+  loadProducts();
+  loadAbout();
+  loadWhatsapp();
+</script>
+</body>
+</html>
