@@ -82,49 +82,7 @@
   .cart-remove { background:none; color:#c0392b; font-size:12px; padding:2px; }
   .summary-row { display:flex; justify-content:space-between; font-size:13px; padding:3px 0; }
   .summary-row.total { font-weight:bold; border-top:1px solid #ddd; margin-top:6px; padding-top:6px; }
-
-  @keyframes revealUp {
-    from { opacity:0; transform:translateY(22px); }
-    to   { opacity:1; transform:translateY(0); }
-  }
-  @keyframes revealPop {
-    from { opacity:0; transform:scale(0.7); }
-    to   { opacity:1; transform:scale(1); }
-  }
-  .banner, .shop-name, .section-title, .card, .about-section, footer {
-    animation: revealUp 0.6s ease both;
-  }
-  .shop-name { animation-delay: 0.1s; }
-  .section-title { animation-delay: 0.2s; }
-  .cart-fab, .whatsapp-fab {
-    animation: revealPop 0.5s ease both;
-    animation-delay: 0.3s;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .banner, .shop-name, .section-title, .card, .about-section, footer, .cart-fab, .whatsapp-fab {
-      animation: none !important;
-    }
-  }
 </style>
-
-<!-- Meta (Facebook) Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', 'YOUR_PIXEL_ID'); // ⚠️ এখানে আপনার Meta Pixel ID বসান
-fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
-/></noscript>
-<!-- End Meta Pixel Code -->
-
 </head>
 <body>
 
@@ -227,6 +185,18 @@ src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
+  // ⚠️ Order Manager অ্যাপের Firebase প্রজেক্ট — অর্ডার এলে সেখানেও পাঠানো হবে
+  const orderManagerConfig = {
+    apiKey: "AIzaSyDGYdr2HtWokAAM7SU1CYJ_w44XN4n3hEE",
+    authDomain: "video-share-8c959.firebaseapp.com",
+    projectId: "video-share-8c959",
+    storageBucket: "video-share-8c959.firebasestorage.app",
+    messagingSenderId: "752929758077",
+    appId: "1:752929758077:web:177ca6d2605d62ae3b8a14"
+  };
+  const orderManagerApp = firebase.initializeApp(orderManagerConfig, "orderManagerApp");
+  const orderManagerDb = orderManagerApp.firestore();
+
   let bannerIndex = 0;
   let bannerTimer = null;
 
@@ -278,14 +248,12 @@ src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
       grid.innerHTML = '';
       if (snap.empty) { emptyMsg.style.display = 'block'; return; }
       emptyMsg.style.display = 'none';
-      let cardIndex = 0;
       snap.forEach(doc => {
         const p = doc.data();
         const images = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
         const thumb = images[0] || 'https://via.placeholder.com/300x200?text=No+Image';
         const card = document.createElement('div');
         card.className = 'card';
-        card.style.animationDelay = (cardIndex * 0.07) + 's';
         card.innerHTML = `
           <img src="${thumb}" alt="${p.name}" onclick='openLightbox(${JSON.stringify(images)}, 0)'>
           <div class="card-body">
@@ -295,7 +263,6 @@ src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
             <button onclick='addToCart(${JSON.stringify(doc.id)}, ${JSON.stringify(p.name)}, ${JSON.stringify(p.price)}, ${JSON.stringify(thumb)})'>কার্টে যোগ করুন</button>
           </div>`;
         grid.appendChild(card);
-        cardIndex++;
       });
     });
   }
@@ -369,18 +336,6 @@ src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
     if (existing) existing.qty++;
     else cart.push({ id, name, price, image, qty: 1 });
     updateCartBadge();
-
-    // Meta Pixel: AddToCart event
-    if (typeof fbq === 'function') {
-      fbq('track', 'AddToCart', {
-        content_ids: [id],
-        content_name: name,
-        content_type: 'product',
-        value: price,
-        currency: 'BDT'
-      });
-    }
-
     const toast = document.getElementById('toast');
     toast.textContent = name + ' কার্টে যোগ হয়েছে';
     toast.style.display = 'block';
@@ -458,17 +413,6 @@ src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
     document.getElementById('coSumDelivery').textContent = '৳' + t.delivery;
     document.getElementById('coSumTotal').textContent = '৳' + t.grandTotal;
     document.getElementById('checkoutModalBg').style.display = 'flex';
-
-    // Meta Pixel: InitiateCheckout event
-    if (typeof fbq === 'function') {
-      fbq('track', 'InitiateCheckout', {
-        content_ids: cart.map(i => i.id),
-        contents: cart.map(i => ({ id: i.id, quantity: i.qty })),
-        value: t.grandTotal,
-        currency: 'BDT',
-        num_items: t.totalQty
-      });
-    }
   }
 
   function backToCart() {
@@ -490,7 +434,7 @@ src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
     const t = cartTotals();
     const items = cart.map(i => ({ productId: i.id, productName: i.name, price: i.price, quantity: i.qty, image: i.image }));
 
-    db.collection('orders').add({
+    const orderData = {
       items: items,
       productName: items.map(i => i.productName + ' x' + i.quantity).join(', '),
       quantity: t.totalQty,
@@ -499,20 +443,13 @@ src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
       customerName: name,
       customerPhone: phone,
       customerAddress: address,
-      status: 'pending',
+      status: 'pending'
+    };
+
+    db.collection('orders').add({
+      ...orderData,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
-      // Meta Pixel: Purchase event
-      if (typeof fbq === 'function') {
-        fbq('track', 'Purchase', {
-          content_ids: items.map(i => i.productId),
-          contents: items.map(i => ({ id: i.productId, quantity: i.quantity })),
-          value: t.grandTotal,
-          currency: 'BDT',
-          num_items: t.totalQty
-        });
-      }
-
       document.getElementById('checkoutModalBg').style.display = 'none';
       cart = [];
       updateCartBadge();
@@ -521,6 +458,19 @@ src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
       document.getElementById('custAddress').value = '';
       const toast = document.getElementById('toast');
       toast.textContent = 'অর্ডার সফলভাবে জমা হয়েছে!';
+
+      // Order Manager অ্যাপে পাঠানো হচ্ছে (ব্যর্থ হলেও কাস্টমারের অর্ডার প্রভাবিত হবে না)
+      orderManagerDb.collection('incomingOrders').add({
+        name: name,
+        mobile: phone,
+        address: address,
+        itemsText: orderData.productName,
+        productTotal: t.productTotal,
+        deliveryCharge: t.delivery,
+        totalAmount: t.grandTotal,
+        processed: false,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(err => console.log('order manager sync failed', err));
       toast.style.display = 'block';
       setTimeout(() => toast.style.display = 'none', 2500);
     }).catch(err => alert('ত্রুটি হয়েছে: ' + err.message));
@@ -572,11 +522,9 @@ src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
       }
 
       if (data.facebook) {
-        let fbUrl = data.facebook.trim();
-        if (!/^https?:\/\//i.test(fbUrl)) fbUrl = 'https://' + fbUrl;
         const fbIcon = document.createElement('a');
         fbIcon.className = 'fb';
-        fbIcon.href = fbUrl;
+        fbIcon.href = data.facebook;
         fbIcon.target = '_blank';
         fbIcon.rel = 'noopener';
         fbIcon.textContent = 'f';
