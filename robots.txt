@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://anabiyacraft.github.io/anabiya-craft-art/sitemap.xml
