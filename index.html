@@ -87,7 +87,7 @@
   /* ---------- Top bar ---------- */
   .topbar { position:sticky; top:0; z-index:90; background:rgba(242,246,245,0.92); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); }
   .topbar-inner { max-width:1180px; margin:0 auto; padding:10px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-  .brand { display:flex; align-items:center; gap:10px; min-width:0; }
+  .brand { display:flex; align-items:center; gap:10px; min-width:0; cursor:pointer; }
   .brand img.logo { height:42px; width:auto; max-width:120px; object-fit:contain; display:block; }
   .brand-text { display:flex; flex-direction:column; line-height:1.05; }
   .brand .main { font-size:22px; font-weight:800; color:var(--ink); letter-spacing:-0.3px; }
@@ -263,7 +263,7 @@
 
 <header class="topbar">
   <div class="topbar-inner">
-    <div class="brand">
+    <div class="brand" onclick="goToHomePage()" role="link" tabindex="0" onkeydown="if(event.key==='Enter')goToHomePage()" title="হোম পেজে যান">
       <img class="logo" id="shopLogo" style="display:none;" alt="logo">
       <div class="brand-text">
         <span class="main" id="shopMain">Anabiya</span>
@@ -644,15 +644,27 @@
   let lastShownId = null;
 
   function getRouteId() {
-    const q = new URLSearchParams(location.search).get('product');
+    const params = new URLSearchParams(location.search);
+    const q = params.get('p') || params.get('product');
     if (q) return q;
     const m = location.hash.match(/^#product=(.+)$/);
     return m ? decodeURIComponent(m[1]) : null;
   }
 
+  // লিংক ছোট রাখতে প্রোডাক্ট আইডির শুরুর ৮ অক্ষর ব্যবহার হয়
+  function shortCode(id) {
+    return encodeURIComponent(String(id).slice(0, 8));
+  }
+
+  function findProductByCode(code) {
+    if (!code) return null;
+    return allProducts.find(x => x.id === code) ||
+           (code.length >= 6 ? allProducts.find(x => x.id.startsWith(code)) : null) || null;
+  }
+
   function productUrl(id) {
     const base = SHARE_BASE_URL ? SHARE_BASE_URL.replace(/[?#].*$/, '').replace(/\/+$/, '') + '/' : location.href.split(/[?#]/)[0];
-    return base + '?product=' + encodeURIComponent(id);
+    return base + '?p=' + shortCode(id);
   }
 
   function copyProductLink() {
@@ -674,7 +686,7 @@
 
   function orderNow() {
     const id = getRouteId();
-    const p = allProducts.find(x => x.id === id);
+    const p = findProductByCode(id);
     if (!p) return;
     const images = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
     if (!cart.find(i => i.id === p.id)) {
@@ -686,8 +698,18 @@
   function openProductDetail(id) {
     listScrollY = window.scrollY;
     navigatedInside = true;
-    history.pushState({}, '', '?product=' + encodeURIComponent(id));
+    history.pushState({}, '', '?p=' + shortCode(id));
     renderRoute();
+  }
+
+  // লোগো/নামে ক্লিক করলে সরাসরি হোম পেজ
+  function goToHomePage() {
+    if (getRouteId()) {
+      listScrollY = 0;
+      history.pushState({}, '', location.pathname);
+      renderRoute();
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function goHome() {
@@ -722,7 +744,7 @@
     banner.style.display = 'none';
     page.style.display = 'block';
 
-    const p = allProducts.find(x => x.id === id);
+    const p = findProductByCode(id);
     if (!p) {
       detailImages = [];
       document.getElementById('detailMainImg').removeAttribute('src');
