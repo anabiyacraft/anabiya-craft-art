@@ -33,12 +33,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Bricolage+Grotesque:wght@600;700;800&display=swap" rel="stylesheet">
-<script>
-  // Cloudflare Worker-এর লিংক এখানে বসান (শেষে / থাকুক বা না থাকুক, সমস্যা নেই)।
-  // এটা বসালে "লিংক কপি" বাটন Worker-এর লিংক কপি করবে, ফলে Facebook-এ প্রোডাক্টের নিজস্ব প্রিভিউ আসবে।
-  // উদাহরণ: const SHARE_BASE_URL = 'https://anabiya.yourname.workers.dev/';
-  const SHARE_BASE_URL = '';
-</script>
 <!-- ===================== PIXEL CODE START ===================== -->
 <script>
   // Facebook (Meta) Pixel ID এখানে বসান। ফাঁকা থাকলে Pixel চালু হবে না।
@@ -87,7 +81,7 @@
   /* ---------- Top bar ---------- */
   .topbar { position:sticky; top:0; z-index:90; background:rgba(242,246,245,0.92); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); }
   .topbar-inner { max-width:1180px; margin:0 auto; padding:10px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-  .brand { display:flex; align-items:center; gap:10px; min-width:0; cursor:pointer; }
+  .brand { display:flex; align-items:center; gap:10px; min-width:0; }
   .brand img.logo { height:42px; width:auto; max-width:120px; object-fit:contain; display:block; }
   .brand-text { display:flex; flex-direction:column; line-height:1.05; }
   .brand .main { font-size:22px; font-weight:800; color:var(--ink); letter-spacing:-0.3px; }
@@ -254,16 +248,112 @@
     .pp-actions { max-width:none; }
   }
 
+  /* ---------- Animations ---------- */
+  @keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
+  @keyframes fadeUp   { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+  @keyframes slideDown{ from { opacity:0; transform:translateY(-100%); } to { opacity:1; transform:none; } }
+  @keyframes popIn    { from { opacity:0; transform:translateY(10px) scale(.96); } to { opacity:1; transform:none; } }
+  @keyframes toastIn  { from { opacity:0; transform:translate(-50%,14px); } to { opacity:1; transform:translate(-50%,0); } }
+  @keyframes growLine { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+  @keyframes fabBump  { 0% { transform:scale(1); } 35% { transform:scale(1.22) rotate(-6deg); } 70% { transform:scale(.95); } 100% { transform:scale(1); } }
+  @keyframes waPulse  {
+    0%   { box-shadow:0 12px 26px -8px rgba(37,211,102,0.7), 0 0 0 0 rgba(37,211,102,0.45); }
+    70%  { box-shadow:0 12px 26px -8px rgba(37,211,102,0.7), 0 0 0 16px rgba(37,211,102,0); }
+    100% { box-shadow:0 12px 26px -8px rgba(37,211,102,0.7), 0 0 0 0 rgba(37,211,102,0); }
+  }
+  .topbar { animation: slideDown .5s cubic-bezier(.2,.7,.2,1) both; }
+  .banner-wrap { animation: fadeUp .7s .1s ease both; }
+  .section-title { animation: fadeUp .5s .15s ease both; }
+  .section-title::after { transform-origin:left; animation: growLine .9s .3s ease both; }
+  .card-img .price { transition: transform .2s ease; }
+  .card:hover .card-img .price { transform: translateY(-3px) rotate(-2deg); }
+  .pp { animation: fadeUp .45s ease both; }
+  .modal-bg { animation: fadeIn .2s ease; }
+  @media (min-width:601px) { .modal { animation: popIn .25s ease; } }
+  .lightbox-bg.active { animation: fadeIn .2s ease; }
+  .lightbox-bg.active .lightbox-box { animation: popIn .25s ease; }
+  .toast { animation: toastIn .25s ease; }
+  .cart-fab.bump { animation: fabBump .45s ease; }
+  .whatsapp-fab { animation: waPulse 2.8s ease-out infinite; }
+  @media (prefers-reduced-motion: reduce) {
+    .section-title::after { animation:none !important; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     * { animation:none !important; transition:none !important; }
   }
+
+  /* ===== Modern scroll reveal & micro-interactions ===== */
+  html { scroll-padding-top: 72px; }
+
+  /* Scroll progress bar */
+  #scrollBar { position:fixed; top:0; left:0; width:100%; height:3px; background:linear-gradient(90deg,var(--primary),var(--marigold)); transform:scaleX(0); transform-origin:left; z-index:120; pointer-events:none; }
+
+  /* Header */
+  .brand img.logo { transition:height .25s ease; }
+  .topbar { transition:box-shadow .3s ease; }
+  .topbar-inner { transition:padding .25s ease; }
+  .topbar.scrolled { box-shadow:0 10px 24px -16px rgba(18,48,43,.45); }
+  .topbar.scrolled .topbar-inner { padding-top:6px; padding-bottom:6px; }
+  .topbar.scrolled .brand img.logo { height:34px; }
+
+  /* Scroll reveal */
+  @keyframes revealUp { from { opacity:0; transform:translateY(28px) scale(.97); } to { opacity:1; transform:none; } }
+  .reveal:not(.in) { opacity:0; }
+  .reveal.in { animation:revealUp .7s cubic-bezier(.2,.7,.2,1) var(--d,0ms) backwards; }
+
+  /* Card hover + tilt */
+  .card { transition:box-shadow .25s ease, transform .25s ease; will-change:transform; }
+  @media (hover:hover) and (pointer:fine) {
+    .card:hover { transform:perspective(900px) translateY(-6px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); }
+  }
+
+  /* Image shimmer + fade-in */
+  @keyframes shimmer { to { background-position:-200% 0; } }
+  .card-img { background:linear-gradient(110deg,#e6eeec 30%,#f4f9f8 50%,#e6eeec 70%); background-size:200% 100%; animation:shimmer 1.4s linear infinite; }
+  .card-img.loaded { animation:none; }
+  .card-img img { opacity:0; transition:opacity .5s ease, transform .4s ease; }
+  .card-img img.loaded { opacity:1; }
+
+  /* Ripple */
+  .card-body button, .pp-actions button, .modal-actions button, .category-btn, .track-link a { position:relative; overflow:hidden; }
+  .ripple { position:absolute; border-radius:50%; background:rgba(255,255,255,.45); transform:scale(0); animation:rippleAnim .6s ease-out forwards; pointer-events:none; }
+  @keyframes rippleAnim { to { transform:scale(1); opacity:0; } }
+
+  /* Add-to-cart success state */
+  .btn-added { background:#1f9d6b !important; color:#fff !important; }
+
+  /* Small hover/focus touches */
+  .track-link a, .category-btn { transition:background .15s, color .15s, transform .2s ease; }
+  .track-link a:hover, .category-btn:hover { transform:translateY(-2px); }
+  .search-box:focus { transform:translateY(-1px); }
+  .social-row a:hover { transform:translateY(-3px) rotate(-6deg); }
+  .category-list button { transition:transform .15s ease, background .15s ease; }
+  .category-list button:hover { transform:translateX(4px); }
+
+  /* Cart badge pop */
+  @keyframes badgePop { 0% { transform:scale(.4); } 60% { transform:scale(1.35); } 100% { transform:scale(1); } }
+  .cart-badge.pop { animation:badgePop .4s ease; }
+
+  /* Back to top */
+  #toTop { position:fixed; right:24px; bottom:88px; width:44px; height:44px; padding:0; border-radius:50%; background:var(--ink); color:#fff; font-size:18px; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-md); z-index:149; opacity:0; transform:translateY(12px) scale(.9); pointer-events:none; transition:opacity .3s ease, transform .3s ease, background .15s; }
+  #toTop.show { opacity:1; transform:none; pointer-events:auto; }
+  #toTop:hover { background:var(--primary); }
+
+  /* Product page staggered entrance */
+  .pp-gallery { animation:fadeUp .55s cubic-bezier(.2,.7,.2,1) backwards; }
+  .pp-info > * { animation:fadeUp .55s cubic-bezier(.2,.7,.2,1) backwards; }
+  .pp-info > :nth-child(1) { animation-delay:.05s; }
+  .pp-info > :nth-child(2) { animation-delay:.12s; }
+  .pp-info > :nth-child(3) { animation-delay:.19s; }
+  .pp-info > :nth-child(4) { animation-delay:.26s; }
 </style>
 </head>
 <body>
 
 <header class="topbar">
   <div class="topbar-inner">
-    <div class="brand" onclick="goToHomePage()" role="link" tabindex="0" onkeydown="if(event.key==='Enter')goToHomePage()" title="হোম পেজে যান">
+    <div class="brand">
       <img class="logo" id="shopLogo" style="display:none;" alt="logo">
       <div class="brand-text">
         <span class="main" id="shopMain">Anabiya</span>
@@ -487,6 +577,7 @@
   let allProducts = [];
   let productsLoaded = false;
   let selectedCategory = 'all';
+  let animateGrid = true;
 
   function loadProducts() {
     db.collection('products').orderBy('createdAt', 'desc').onSnapshot(snap => {
@@ -538,6 +629,7 @@
 
   function selectCategory(cat) {
     selectedCategory = cat;
+    animateGrid = true;
     updateCategoryUI();
     applyFilters();
     closeCategoryPopup();
@@ -565,11 +657,16 @@
       return;
     }
     emptyMsg.style.display = 'none';
-    products.forEach(p => {
+    const cols = getComputedStyle(grid).gridTemplateColumns.split(' ').length || 1;
+    products.forEach((p, idx) => {
       const images = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
       const thumb = images[0] || 'https://via.placeholder.com/300x200?text=No+Image';
       const card = document.createElement('div');
       card.className = 'card';
+      if (animateGrid) {
+        card.classList.add('reveal');
+        card.style.setProperty('--d', ((idx % cols) * 80) + 'ms');
+      }
       card.innerHTML = `
         <div class="card-img">
           <img src="${thumb}" alt="${p.name}" onclick='openLightbox(${JSON.stringify(images)}, 0)'>
@@ -577,10 +674,12 @@
         </div>
         <div class="card-body">
           <h3 onclick='openProductDetail(${JSON.stringify(p.id)})' style="cursor:pointer;">${p.name}</h3>
-          <button onclick='addToCart(${JSON.stringify(p.id)}, ${JSON.stringify(p.name)}, ${JSON.stringify(p.price)}, ${JSON.stringify(thumb)}, ${JSON.stringify(p.boroCount||0)}, ${JSON.stringify(p.chotoCount||0)})'>🛒 কার্টে যোগ করুন</button>
+          <button onclick='addToCart(${JSON.stringify(p.id)}, ${JSON.stringify(p.name)}, ${JSON.stringify(p.price)}, ${JSON.stringify(thumb)}, ${JSON.stringify(p.boroCount||0)}, ${JSON.stringify(p.chotoCount||0)}, ${p.isMirror ? 1 : 0})'>🛒 কার্টে যোগ করুন</button>
         </div>`;
       grid.appendChild(card);
+      if (animateGrid && window.observeReveal) window.observeReveal(card);
     });
+    animateGrid = false;
   }
 
   // ---------- Order Tracking ----------
@@ -644,27 +743,14 @@
   let lastShownId = null;
 
   function getRouteId() {
-    const params = new URLSearchParams(location.search);
-    const q = params.get('p') || params.get('product');
+    const q = new URLSearchParams(location.search).get('product');
     if (q) return q;
     const m = location.hash.match(/^#product=(.+)$/);
     return m ? decodeURIComponent(m[1]) : null;
   }
 
-  // লিংক ছোট রাখতে প্রোডাক্ট আইডির শুরুর ৮ অক্ষর ব্যবহার হয়
-  function shortCode(id) {
-    return encodeURIComponent(String(id).slice(0, 8));
-  }
-
-  function findProductByCode(code) {
-    if (!code) return null;
-    return allProducts.find(x => x.id === code) ||
-           (code.length >= 6 ? allProducts.find(x => x.id.startsWith(code)) : null) || null;
-  }
-
   function productUrl(id) {
-    const base = SHARE_BASE_URL ? SHARE_BASE_URL.replace(/[?#].*$/, '').replace(/\/+$/, '') + '/' : location.href.split(/[?#]/)[0];
-    return base + '?p=' + shortCode(id);
+    return location.href.split(/[?#]/)[0] + '?product=' + encodeURIComponent(id);
   }
 
   function copyProductLink() {
@@ -686,11 +772,11 @@
 
   function orderNow() {
     const id = getRouteId();
-    const p = findProductByCode(id);
+    const p = allProducts.find(x => x.id === id);
     if (!p) return;
     const images = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
     if (!cart.find(i => i.id === p.id)) {
-      addToCart(p.id, p.name, p.price, images[0] || 'https://via.placeholder.com/300x200?text=No+Image', p.boroCount || 0, p.chotoCount || 0);
+      addToCart(p.id, p.name, p.price, images[0] || 'https://via.placeholder.com/300x200?text=No+Image', p.boroCount || 0, p.chotoCount || 0, p.isMirror ? 1 : 0);
     }
     goToCheckout();
   }
@@ -698,18 +784,8 @@
   function openProductDetail(id) {
     listScrollY = window.scrollY;
     navigatedInside = true;
-    history.pushState({}, '', '?p=' + shortCode(id));
+    history.pushState({}, '', '?product=' + encodeURIComponent(id));
     renderRoute();
-  }
-
-  // লোগো/নামে ক্লিক করলে সরাসরি হোম পেজ
-  function goToHomePage() {
-    if (getRouteId()) {
-      listScrollY = 0;
-      history.pushState({}, '', location.pathname);
-      renderRoute();
-    }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function goHome() {
@@ -744,7 +820,7 @@
     banner.style.display = 'none';
     page.style.display = 'block';
 
-    const p = findProductByCode(id);
+    const p = allProducts.find(x => x.id === id);
     if (!p) {
       detailImages = [];
       document.getElementById('detailMainImg').removeAttribute('src');
@@ -772,7 +848,7 @@
     document.getElementById('detailDesc').textContent = p.description || '';
     const addBtn = document.getElementById('detailAddBtn');
     document.getElementById('detailActions').style.display = '';
-    addBtn.onclick = () => addToCart(p.id, p.name, p.price, detailImages[0], p.boroCount || 0, p.chotoCount || 0);
+    addBtn.onclick = () => addToCart(p.id, p.name, p.price, detailImages[0], p.boroCount || 0, p.chotoCount || 0, p.isMirror ? 1 : 0);
     document.title = p.name + ' | Anabiya Craft & Art';
   }
 
@@ -858,12 +934,14 @@
     else badge.style.display = 'none';
   }
 
-  function addToCart(id, name, price, image, boroCount, chotoCount) {
+  function addToCart(id, name, price, image, boroCount, chotoCount, aynaCount) {
     const existing = cart.find(i => i.id === id);
     if (existing) existing.qty++;
-    else cart.push({ id, name, price, image, qty: 1, boroCount: boroCount || 0, chotoCount: chotoCount || 0 });
+    else cart.push({ id, name, price, image, qty: 1, boroCount: boroCount || 0, chotoCount: chotoCount || 0, aynaCount: aynaCount || 0 });
     trackPixel('AddToCart', { content_ids: [id], content_name: name, content_type: 'product', value: Number(price) || 0, currency: 'BDT' });
     updateCartBadge();
+    const fab = document.querySelector('.cart-fab');
+    if (fab) { fab.classList.remove('bump'); void fab.offsetWidth; fab.classList.add('bump'); }
     const toast = document.getElementById('toast');
     toast.textContent = name + ' কার্টে যোগ হয়েছে';
     toast.style.display = 'block';
@@ -964,6 +1042,8 @@
     const items = cart.map(i => ({ productId: i.id, productName: i.name, price: i.price, quantity: i.qty, image: i.image }));
     const totalBoro = cart.reduce((s, i) => s + (i.boroCount || 0) * i.qty, 0);
     const totalChoto = cart.reduce((s, i) => s + (i.chotoCount || 0) * i.qty, 0);
+    const totalAyna = cart.reduce((s, i) => s + (i.aynaCount || 0) * i.qty, 0);
+    const othersText = cart.filter(i => !i.aynaCount).map(i => i.name + ' x' + i.qty).join(', ');
 
     const orderData = {
       items: items,
@@ -999,6 +1079,8 @@
         itemsText: orderData.productName,
         boro: totalBoro,
         choto: totalChoto,
+        ayna: totalAyna,
+        othersText: othersText,
         productTotal: t.productTotal,
         deliveryCharge: t.delivery,
         totalAmount: t.grandTotal,
@@ -1089,6 +1171,160 @@
   loadAbout();
   loadWhatsapp();
   loadLogo();
+</script>
+
+<!-- ===== Scroll reveal & micro-interactions ===== -->
+<script>
+(function () {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const finePointer = matchMedia('(hover:hover) and (pointer:fine)').matches;
+
+  /* ---- Scroll reveal ---- */
+  let io = null;
+  if ('IntersectionObserver' in window && !reduce) {
+    io = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  }
+  window.observeReveal = el => { if (io) io.observe(el); else el.classList.add('in'); };
+
+  ['.tools', '.about-box', 'footer'].forEach(sel =>
+    document.querySelectorAll(sel).forEach(el => { el.classList.add('reveal'); window.observeReveal(el); })
+  );
+
+  /* ---- Progress bar, sticky header, back-to-top ---- */
+  const bar = document.createElement('div');
+  bar.id = 'scrollBar';
+  document.body.appendChild(bar);
+
+  const toTop = document.createElement('button');
+  toTop.id = 'toTop';
+  toTop.setAttribute('aria-label', 'উপরে যান');
+  toTop.textContent = '↑';
+  toTop.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.body.appendChild(toTop);
+
+  const topbar = document.querySelector('.topbar');
+  let ticking = false;
+  function onScroll() {
+    const y = window.scrollY;
+    const h = document.documentElement.scrollHeight - innerHeight;
+    bar.style.transform = 'scaleX(' + (h > 0 ? Math.min(y / h, 1) : 0) + ')';
+    topbar.classList.toggle('scrolled', y > 16);
+    toTop.classList.toggle('show', y > 500);
+    ticking = false;
+  }
+  addEventListener('scroll', () => {
+    if (!ticking) { ticking = true; requestAnimationFrame(onScroll); }
+  }, { passive: true });
+  onScroll();
+
+  /* ---- Image fade-in (shimmer বন্ধ করে) ---- */
+  function markLoaded(e) {
+    const t = e.target;
+    if (t.tagName === 'IMG' && t.closest('.card-img')) {
+      t.classList.add('loaded');
+      t.parentElement.classList.add('loaded');
+    }
+  }
+  document.addEventListener('load', markLoaded, true);
+  document.addEventListener('error', markLoaded, true);
+
+  /* ---- Fly-to-cart ---- */
+  function flyToCart(src) {
+    const fab = document.querySelector('.cart-fab');
+    if (!src || !fab || reduce) return;
+    const a = src.getBoundingClientRect(), b = fab.getBoundingClientRect();
+    const clone = document.createElement('img');
+    clone.src = src.currentSrc || src.src;
+    Object.assign(clone.style, {
+      position: 'fixed', left: a.left + 'px', top: a.top + 'px',
+      width: a.width + 'px', height: a.height + 'px', objectFit: 'cover',
+      borderRadius: '18px', zIndex: 400, pointerEvents: 'none',
+      boxShadow: '0 18px 36px -12px rgba(18,48,43,.5)'
+    });
+    document.body.appendChild(clone);
+    const dx = (b.left + b.width / 2) - (a.left + a.width / 2);
+    const dy = (b.top + b.height / 2) - (a.top + a.height / 2);
+    const anim = clone.animate([
+      { transform: 'translate(0,0) scale(1)', opacity: 1 },
+      { transform: `translate(${dx}px,${dy}px) scale(.08)`, opacity: .3 }
+    ], { duration: 700, easing: 'cubic-bezier(.55,0,.35,1)' });
+    anim.onfinish = () => {
+      clone.remove();
+      fab.classList.remove('bump'); void fab.offsetWidth; fab.classList.add('bump');
+    };
+  }
+
+  /* ---- Ripple + Add-to-cart feedback ---- */
+  const RIPPLE_SEL = '.card-body button, .pp-actions button, .modal-actions button, .category-btn, .track-link a';
+  document.addEventListener('click', e => {
+    const el = e.target.closest(RIPPLE_SEL);
+    if (!el) return;
+
+    const isAdd = el.matches('.card-body button, #detailAddBtn');
+    const txt = isAdd ? [...el.childNodes].find(n => n.nodeType === 3) : null;
+    if (isAdd && txt && !el.dataset.orig) el.dataset.orig = txt.nodeValue;
+
+    if (!reduce) {
+      const r = el.getBoundingClientRect();
+      const d = Math.max(r.width, r.height) * 2;
+      const x = e.detail ? e.clientX - r.left : r.width / 2;
+      const y = e.detail ? e.clientY - r.top : r.height / 2;
+      const s = document.createElement('span');
+      s.className = 'ripple';
+      s.style.cssText = `width:${d}px;height:${d}px;left:${x - d / 2}px;top:${y - d / 2}px`;
+      el.appendChild(s);
+      setTimeout(() => s.remove(), 650);
+    }
+
+    if (isAdd && txt) {
+      txt.nodeValue = '✓ যোগ হয়েছে';
+      el.classList.add('btn-added');
+      clearTimeout(el._t);
+      el._t = setTimeout(() => {
+        txt.nodeValue = el.dataset.orig;
+        el.classList.remove('btn-added');
+        delete el.dataset.orig;
+      }, 1300);
+      const img = el.id === 'detailAddBtn'
+        ? document.getElementById('detailMainImg')
+        : (el.closest('.card') && el.closest('.card').querySelector('.card-img img'));
+      flyToCart(img);
+    }
+  });
+
+  /* ---- Card tilt (শুধু ডেস্কটপে) ---- */
+  if (finePointer && !reduce) {
+    const grid = document.getElementById('productGrid');
+    grid.addEventListener('pointermove', e => {
+      const c = e.target.closest('.card');
+      if (!c) return;
+      const r = c.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - .5;
+      const py = (e.clientY - r.top) / r.height - .5;
+      c.style.setProperty('--ry', (px * 6) + 'deg');
+      c.style.setProperty('--rx', (-py * 6) + 'deg');
+    });
+    grid.addEventListener('pointerout', e => {
+      const c = e.target.closest('.card');
+      if (c && !c.contains(e.relatedTarget)) {
+        c.style.removeProperty('--rx');
+        c.style.removeProperty('--ry');
+      }
+    });
+  }
+
+  /* ---- Cart badge pop ---- */
+  const badge = document.getElementById('cartBadge');
+  if (badge) {
+    new MutationObserver(() => {
+      badge.classList.remove('pop'); void badge.offsetWidth; badge.classList.add('pop');
+    }).observe(badge, { childList: true, characterData: true, subtree: true });
+  }
+})();
 </script>
 </body>
 </html>
