@@ -910,20 +910,44 @@
   }
 
   // ---------- Cart ----------
-  const DELIVERY_FIRST = 130;
-  const DELIVERY_EXTRA = 20;
+  // সাধারণ রেট (অ্যাডমিনের "সম্পর্কে" ট্যাব থেকে লাইভ আসে; লোড হওয়ার আগ পর্যন্ত এই ডিফল্ট)
+  let DELIVERY_FIRST = 130;
+  let DELIVERY_EXTRA = 20;
 
   let cart = [];
 
-  function calcDelivery(totalQty) {
-    if (totalQty <= 0) return 0;
-    return DELIVERY_FIRST + (totalQty - 1) * DELIVERY_EXTRA;
+  function loadDelivery() {
+    db.collection('settings').doc('delivery').onSnapshot(doc => {
+      if (doc.exists) {
+        const d = doc.data();
+        if (typeof d.first === 'number') DELIVERY_FIRST = d.first;
+        if (typeof d.extra === 'number') DELIVERY_EXTRA = d.extra;
+      }
+      if (document.getElementById('cartModalBg').style.display === 'flex') renderCart();
+    });
+  }
+
+  // প্রতি পিস = ১ পার্সেল। পণ্যে নিজস্ব রেট (deliveryFirst/deliveryExtra) থাকলে সেটা, না থাকলে সাধারণ রেট।
+  // কার্টে "প্রথম পার্সেল রেট" সবচেয়ে বেশি যে পার্সেলের, সেটা প্রথম পার্সেল ধরা হয়;
+  // বাকি প্রতিটি পার্সেলের জন্য তার নিজের "অতিরিক্ত" রেট যোগ হয়।
+  function calcDelivery() {
+    const parcels = [];
+    cart.forEach(i => {
+      const p = allProducts.find(x => x.id === i.id) || {};
+      const first = (typeof p.deliveryFirst === 'number') ? p.deliveryFirst : DELIVERY_FIRST;
+      const extra = (typeof p.deliveryExtra === 'number') ? p.deliveryExtra : DELIVERY_EXTRA;
+      for (let n = 0; n < i.qty; n++) parcels.push({ first, extra });
+    });
+    if (!parcels.length) return 0;
+    let best = 0;
+    parcels.forEach((p, idx) => { if (p.first > parcels[best].first) best = idx; });
+    return parcels.reduce((sum, p, idx) => sum + (idx === best ? p.first : p.extra), 0);
   }
 
   function cartTotals() {
     const totalQty = cart.reduce((s, i) => s + i.qty, 0);
     const productTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-    const delivery = calcDelivery(totalQty);
+    const delivery = calcDelivery();
     return { totalQty, productTotal, delivery, grandTotal: productTotal + delivery };
   }
 
@@ -1171,6 +1195,7 @@
   loadAbout();
   loadWhatsapp();
   loadLogo();
+  loadDelivery();
 </script>
 
 <!-- ===== Scroll reveal & micro-interactions ===== -->
