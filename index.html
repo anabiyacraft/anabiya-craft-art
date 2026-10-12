@@ -1351,5 +1351,44 @@
   }
 })();
 </script>
+<!-- ===== Visitor counter + live presence ===== -->
+<script>
+(function () {
+  function dhakaDate() { return new Date(Date.now() + 6 * 3600 * 1000).toISOString().slice(0, 10); }
+  function sGet(store, k) { try { return window[store].getItem(k); } catch (e) { return null; } }
+  function sSet(store, k, v) { try { window[store].setItem(k, v); } catch (e) {} }
+
+  const today = dhakaDate();
+  const newSession = !sGet('sessionStorage', 'ac_sess');
+  const newVisitorToday = sGet('localStorage', 'ac_vday') !== today;
+  let sid = sGet('sessionStorage', 'ac_sid');
+  if (!sid) { sid = Date.now().toString(36) + Math.random().toString(36).slice(2, 8); sSet('sessionStorage', 'ac_sid', sid); }
+
+  /* ---- ভিজিট গণনা (প্রতি সেশনে ১ ভিজিট, প্রতিদিন প্রতি ব্রাউজারে ১ ইউনিক ভিজিটর) ---- */
+  if (newSession || newVisitorToday) {
+    sSet('sessionStorage', 'ac_sess', '1');
+    sSet('localStorage', 'ac_vday', today);
+    try {
+      const inc = firebase.firestore.FieldValue.increment;
+      const v = newSession ? 1 : 0, u = newVisitorToday ? 1 : 0;
+      const batch = db.batch();
+      batch.set(db.collection('stats').doc('d_' + today), { date: today, visits: inc(v), visitors: inc(u) }, { merge: true });
+      batch.set(db.collection('stats').doc('total'), { visits: inc(v), visitors: inc(u) }, { merge: true });
+      batch.commit().catch(() => {});
+    } catch (e) {}
+  }
+
+  /* ---- লাইভ অনলাইন (ট্যাব খোলা ও দেখা অবস্থায় ৪৫ সেকেন্ডে একবার সাড়া) ---- */
+  const ref = db.collection('presence').doc(sid);
+  function beat() {
+    if (document.visibilityState === 'visible') ref.set({ lastSeen: Date.now() }).catch(() => {});
+  }
+  beat();
+  setInterval(beat, 45000);
+  document.addEventListener('visibilitychange', beat);
+  addEventListener('pageshow', beat);
+  addEventListener('pagehide', () => { ref.delete().catch(() => {}); });
+})();
+</script>
 </body>
 </html>
