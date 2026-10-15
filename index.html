@@ -128,7 +128,7 @@
   .card { background:var(--surface); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); display:flex; flex-direction:column; transition:box-shadow .2s ease; border:1px solid var(--border); }
   .card:hover { box-shadow:var(--shadow-md); }
   .card-img { position:relative; overflow:hidden; background:#e6eeec; }
-  .card-img img { width:100%; aspect-ratio:4/5; height:auto; object-fit:cover; cursor:zoom-in; display:block; transition:transform .4s ease; }
+  .card-img img { width:100%; aspect-ratio:4/5; height:auto; object-fit:cover; cursor:pointer; display:block; transition:transform .4s ease; }
   .card:hover .card-img img { transform:scale(1.05); }
   .card-img .price { position:absolute; left:10px; bottom:10px; background:var(--marigold); color:var(--ink); font-weight:800; font-size:15px; padding:5px 12px; border-radius:10px; box-shadow:0 6px 14px -4px rgba(18,48,43,0.5); font-family:'Bricolage Grotesque','Anek Bangla',sans-serif; }
   .card-body { padding:14px 14px 15px; flex:1; display:flex; flex-direction:column; }
@@ -347,6 +347,10 @@
   .pp-info > :nth-child(2) { animation-delay:.12s; }
   .pp-info > :nth-child(3) { animation-delay:.19s; }
   .pp-info > :nth-child(4) { animation-delay:.26s; }
+  /* ---- অফার মূল্য ---- */
+  .old-price { text-decoration:line-through; font-weight:600; font-size:.72em; opacity:.6; margin-right:6px; }
+  .off-badge { position:absolute; top:10px; left:10px; background:var(--accent); color:#fff; font-weight:800; font-size:12px; padding:4px 10px; border-radius:999px; box-shadow:0 6px 14px -4px rgba(18,48,43,.5); }
+  .detail-price .old-price { font-size:.75em; }
 </style>
 </head>
 <body>
@@ -647,6 +651,21 @@
     renderProductGrid(filtered);
   }
 
+  // অফার মূল্য থাকলে (এবং আসল দামের চেয়ে কম হলে) সেটাই বিক্রয়মূল্য
+  function hasOffer(p) {
+    const o = Number(p.offerPrice), r = Number(p.price);
+    return o > 0 && r > 0 && o < r;
+  }
+  function priceOf(p) { return hasOffer(p) ? Number(p.offerPrice) : Number(p.price); }
+  function priceHtml(p) {
+    return hasOffer(p) ? '<s class="old-price">৳ ' + p.price + '</s>৳ ' + p.offerPrice : '৳ ' + p.price;
+  }
+  function offerBadge(p) {
+    if (!hasOffer(p)) return '';
+    const pct = Math.round((1 - Number(p.offerPrice) / Number(p.price)) * 100);
+    return '<div class="off-badge">' + Number(pct).toLocaleString('bn-BD') + '% ছাড়</div>';
+  }
+
   function renderProductGrid(products) {
     const grid = document.getElementById('productGrid');
     const emptyMsg = document.getElementById('emptyMsg');
@@ -669,12 +688,13 @@
       }
       card.innerHTML = `
         <div class="card-img">
-          <img src="${thumb}" alt="${p.name}" onclick='openLightbox(${JSON.stringify(images)}, 0)'>
-          <div class="price">৳ ${p.price}</div>
+          <img src="${thumb}" alt="${p.name}" onclick='openProductDetail(${JSON.stringify(p.id)})'>
+          ${offerBadge(p)}
+          <div class="price">${priceHtml(p)}</div>
         </div>
         <div class="card-body">
           <h3 onclick='openProductDetail(${JSON.stringify(p.id)})' style="cursor:pointer;">${p.name}</h3>
-          <button onclick='addToCart(${JSON.stringify(p.id)}, ${JSON.stringify(p.name)}, ${JSON.stringify(p.price)}, ${JSON.stringify(thumb)}, ${JSON.stringify(p.boroCount||0)}, ${JSON.stringify(p.chotoCount||0)}, ${p.isMirror ? 1 : 0})'>🛒 কার্টে যোগ করুন</button>
+          <button onclick='addToCart(${JSON.stringify(p.id)}, ${JSON.stringify(p.name)}, ${JSON.stringify(priceOf(p))}, ${JSON.stringify(thumb)}, ${JSON.stringify(p.boroCount||0)}, ${JSON.stringify(p.chotoCount||0)}, ${p.isMirror ? 1 : 0})'>🛒 কার্টে যোগ করুন</button>
         </div>`;
       grid.appendChild(card);
       if (animateGrid && window.observeReveal) window.observeReveal(card);
@@ -776,7 +796,7 @@
     if (!p) return;
     const images = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
     if (!cart.find(i => i.id === p.id)) {
-      addToCart(p.id, p.name, p.price, images[0] || 'https://via.placeholder.com/300x200?text=No+Image', p.boroCount || 0, p.chotoCount || 0, p.isMirror ? 1 : 0);
+      addToCart(p.id, p.name, priceOf(p), images[0] || 'https://via.placeholder.com/300x200?text=No+Image', p.boroCount || 0, p.chotoCount || 0, p.isMirror ? 1 : 0);
     }
     goToCheckout();
   }
@@ -837,18 +857,18 @@
     if (lastShownId !== id) {
       detailIndex = 0;
       window.scrollTo(0, 0);
-      trackPixel('ViewContent', { content_ids: [p.id], content_name: p.name, content_type: 'product', value: Number(p.price) || 0, currency: 'BDT' });
+      trackPixel('ViewContent', { content_ids: [p.id], content_name: p.name, content_type: 'product', value: priceOf(p) || 0, currency: 'BDT' });
     }
     lastShownId = id;
     renderDetailImage();
     document.getElementById('detailName').textContent = p.name;
     const price = document.getElementById('detailPrice');
     price.style.display = '';
-    price.textContent = '৳ ' + p.price;
+    price.innerHTML = priceHtml(p);
     document.getElementById('detailDesc').textContent = p.description || '';
     const addBtn = document.getElementById('detailAddBtn');
     document.getElementById('detailActions').style.display = '';
-    addBtn.onclick = () => addToCart(p.id, p.name, p.price, detailImages[0], p.boroCount || 0, p.chotoCount || 0, p.isMirror ? 1 : 0);
+    addBtn.onclick = () => addToCart(p.id, p.name, priceOf(p), detailImages[0], p.boroCount || 0, p.chotoCount || 0, p.isMirror ? 1 : 0);
     document.title = p.name + ' | Anabiya Craft & Art';
   }
 
