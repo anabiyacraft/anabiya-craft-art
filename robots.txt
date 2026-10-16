@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://anabiyacraft.github.io/anabiya-craft-art/sitemap.xml
+Sitemap: https://anabiyacraft.shop/sitemap.xml
