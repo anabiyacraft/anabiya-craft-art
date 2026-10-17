@@ -1,0 +1,36 @@
+name: Update product pages for Google
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # প্রতি ৬ ঘণ্টায় নিজে নিজে চলবে
+  workflow_dispatch:         # চাইলে হাতে চালানো যাবে (Actions ট্যাব → Run workflow)
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Generate products.html, images and sitemap
+        run: node scripts/generate-seo.mjs
+      - name: Commit changes and republish site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "seo-bot"
+          git config user.email "seo-bot@users.noreply.github.com"
+          git add -A products.html sitemap.xml images
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Update product pages"
+            git push
+            # নতুন ফাইল সাইটে তুলতে আপনার static.yml আবার চালানো হচ্ছে
+            gh workflow run static.yml
+          fi
