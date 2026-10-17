@@ -352,6 +352,9 @@
   .old-price { text-decoration:line-through; font-weight:600; font-size:.72em; opacity:.6; margin-right:6px; }
   .off-badge { position:absolute; top:10px; left:10px; background:var(--accent); color:#fff; font-weight:800; font-size:12px; padding:4px 10px; border-radius:999px; box-shadow:0 6px 14px -4px rgba(18,48,43,.5); }
   .detail-price .old-price { font-size:.75em; }
+  .pay-opt { display:flex; align-items:flex-start; gap:9px; margin:8px 0 !important; padding:10px 12px; border:2px solid var(--border); border-radius:12px; cursor:pointer; color:var(--ink) !important; font-size:13.5px !important; font-weight:600; background:#fff; line-height:1.5; }
+  .pay-opt input { width:auto !important; margin-top:4px; }
+  .pay-opt.sel { border-color:var(--primary); background:var(--primary-light); }
 </style>
 </head>
 <body>
@@ -459,17 +462,22 @@
     <label>ঠিকানা</label>
     <textarea id="custAddress" rows="3" placeholder="সম্পূর্ণ ঠিকানা লিখুন"></textarea>
     <div id="payBox" style="display:none;margin-top:14px;background:#fff8e6;border:2px dashed #f5b301;border-radius:12px;padding:12px 14px;">
-      <div style="font-weight:800;margin-bottom:6px;">💳 পেমেন্টের নিয়ম</div>
-      <div style="font-size:13px;line-height:1.75;">পণ্যের টাকা <b>ক্যাশ অন ডেলিভারি</b>, মানে পণ্য হাতে পেয়ে দেবেন।<br>অর্ডার নিশ্চিত করতে আগে <b>ডেলিভারি চার্জ ৳<span id="payAmount"></span></b> বিকাশে <b id="payType"></b> করুন এই নম্বরে:</div>
-      <div style="display:flex;align-items:center;gap:10px;margin:8px 0;">
-        <b id="payNumber" style="font-size:19px;letter-spacing:.5px;"></b>
-        <button type="button" onclick="copyPayNumber()" style="padding:5px 14px;font-size:12px;">কপি</button>
+      <div style="font-weight:800;margin-bottom:4px;">💳 কীভাবে পেমেন্ট করবেন?</div>
+      <label class="pay-opt" id="opt_cod"><input type="radio" name="payMethod" value="cod" onchange="updatePayUI()"><span id="optCodText"></span></label>
+      <label class="pay-opt" id="opt_advance_delivery"><input type="radio" name="payMethod" value="advance_delivery" onchange="updatePayUI()"><span id="optDelText"></span></label>
+      <label class="pay-opt" id="opt_advance_full"><input type="radio" name="payMethod" value="advance_full" onchange="updatePayUI()"><span id="optFullText"></span></label>
+      <div id="payDetails" style="display:none;margin-top:8px;">
+        <div style="font-size:13px;line-height:1.75;">নিচের নম্বরে বিকাশে <b id="payType"></b> করুন <b>৳<span id="payAmount"></span></b>:</div>
+        <div style="display:flex;align-items:center;gap:10px;margin:8px 0;">
+          <b id="payNumber" style="font-size:19px;letter-spacing:.5px;"></b>
+          <button type="button" onclick="copyPayNumber()" style="padding:5px 14px;font-size:12px;">কপি</button>
+        </div>
+        <div id="payNote" style="font-size:12px;color:#7a5a00;"></div>
+        <label>যে নম্বর থেকে পাঠিয়েছেন</label>
+        <input type="text" id="paySender" placeholder="01XXXXXXXXX" inputmode="numeric">
+        <label>বিকাশ TrxID</label>
+        <input type="text" id="payTrx" placeholder="যেমন: 8N7A6D5EE4" style="text-transform:uppercase;">
       </div>
-      <div id="payNote" style="font-size:12px;color:#7a5a00;"></div>
-      <label>যে নম্বর থেকে পাঠিয়েছেন</label>
-      <input type="text" id="paySender" placeholder="01XXXXXXXXX" inputmode="numeric">
-      <label>বিকাশ TrxID</label>
-      <input type="text" id="payTrx" placeholder="যেমন: 8N7A6D5EE4" style="text-transform:uppercase;">
     </div>
     <div id="checkoutSummary" style="margin-top:10px;background:#f7f7fb;border-radius:8px;padding:10px;">
       <div class="summary-row"><span>পণ্যের মূল্য</span><span id="coSumProducts"></span></div>
@@ -764,8 +772,9 @@
               <span class="status-pill ${statusClass}">${statusText}</span>
             </div>
             <div>সর্বমোট: ৳${o.totalAmount ?? '—'}</div>${o.trxId ? `
-            <div style="margin-top:6px;">অগ্রিম ডেলিভারি চার্জ: ৳${Number(o.advancePaid) || 0} — ${o.advanceVerified ? '<b style="color:#0b5a37;">✅ বিকাশে মিলেছে</b>' : '<b style="color:#7a5a00;">⏳ যাচাই চলছে</b>'}</div>
-            <div>ডেলিভারির সময় দিতে হবে: <b>৳${Number(o.dueOnDelivery) || 0}</b></div>` : ''}`;
+            <div style="margin-top:6px;">${o.paymentMethod === 'advance_full' ? 'পুরো টাকা অগ্রিম' : 'অগ্রিম ডেলিভারি চার্জ'}: ৳${Number(o.advancePaid) || 0} — ${o.advanceVerified ? '<b style="color:#0b5a37;">✅ বিকাশে মিলেছে</b>' : '<b style="color:#7a5a00;">⏳ যাচাই চলছে</b>'}</div>
+            <div>ডেলিভারির সময় দিতে হবে: <b>৳${Number(o.dueOnDelivery) || 0}</b></div>` : (o.paymentMethod === 'cod' ? `
+            <div style="margin-top:6px;">পেমেন্ট: ক্যাশ অন ডেলিভারি (ডেলিভারিতে দিতে হবে <b>৳${Number(o.dueOnDelivery) || 0}</b>)</div>` : '')}`;
           results.appendChild(div);
         });
       })
@@ -1082,16 +1091,7 @@
     document.getElementById('coSumProducts').textContent = '৳' + t.productTotal;
     document.getElementById('coSumDelivery').textContent = '৳' + t.delivery;
     document.getElementById('coSumTotal').textContent = '৳' + t.grandTotal;
-    const pb = document.getElementById('payBox');
-    if (payCfg.enabled && payCfg.number) {
-      document.getElementById('payAmount').textContent = t.delivery;
-      document.getElementById('payNumber').textContent = payCfg.number;
-      document.getElementById('payType').textContent = payCfg.type || 'Send Money';
-      document.getElementById('payNote').textContent = payCfg.note || '';
-      pb.style.display = 'block';
-    } else {
-      pb.style.display = 'none';
-    }
+    setupPayBox();
     document.getElementById('checkoutModalBg').style.display = 'flex';
   }
 
@@ -1100,13 +1100,63 @@
     openCart();
   }
 
+  function payOptions() {
+    const opts = [];
+    if (!(payCfg.enabled && payCfg.number)) return opts;
+    if (payCfg.allowCod !== false) opts.push('cod');
+    if (payCfg.allowDelivery !== false) opts.push('advance_delivery');
+    if (payCfg.allowFull !== false) opts.push('advance_full');
+    return opts;
+  }
+  function payBoxVisible() {
+    const o = payOptions();
+    return o.length > 0 && !(o.length === 1 && o[0] === 'cod');
+  }
+  function selectedPayMethod() {
+    const c = document.querySelector('input[name="payMethod"]:checked');
+    return c ? c.value : 'cod';
+  }
+  function setupPayBox() {
+    const pb = document.getElementById('payBox');
+    if (!payBoxVisible()) { pb.style.display = 'none'; return; }
+    const opts = payOptions(), t = cartTotals();
+    pb.style.display = 'block';
+    document.getElementById('optCodText').textContent = 'ক্যাশ অন ডেলিভারি: পণ্য হাতে পেয়ে সব ৳' + t.grandTotal + ' দেবেন';
+    document.getElementById('optDelText').textContent = 'আগে শুধু ডেলিভারি চার্জ ৳' + t.delivery + ' বিকাশে দিন, বাকি ৳' + t.productTotal + ' ডেলিভারিতে দেবেন';
+    document.getElementById('optFullText').textContent = 'পুরো ৳' + t.grandTotal + ' আগেই বিকাশে দিয়ে দিন';
+    ['cod', 'advance_delivery', 'advance_full'].forEach(m => {
+      document.getElementById('opt_' + m).style.display = opts.includes(m) ? 'flex' : 'none';
+    });
+    const cur = document.querySelector('input[name="payMethod"]:checked');
+    const keep = (cur && opts.includes(cur.value)) ? cur.value : opts[0];
+    document.querySelector('input[name="payMethod"][value="' + keep + '"]').checked = true;
+    document.getElementById('payNumber').textContent = payCfg.number;
+    document.getElementById('payType').textContent = payCfg.type || 'Send Money';
+    document.getElementById('payNote').textContent = payCfg.note || '';
+    updatePayUI();
+  }
+  function updatePayUI() {
+    const t = cartTotals(), m = selectedPayMethod();
+    document.querySelectorAll('.pay-opt').forEach(l => l.classList.toggle('sel', l.querySelector('input').checked));
+    document.getElementById('payDetails').style.display = (m === 'cod') ? 'none' : 'block';
+    document.getElementById('payAmount').textContent = (m === 'advance_full') ? t.grandTotal : t.delivery;
+  }
+  function payFields(pay, t) {
+    if (pay.method === 'cod') return { paymentMethod: 'cod', advancePaid: 0, dueOnDelivery: t.grandTotal };
+    const adv = pay.method === 'advance_full' ? t.grandTotal : t.delivery;
+    return { paymentMethod: pay.method, advancePaid: adv, dueOnDelivery: t.grandTotal - adv, trxId: pay.trx, senderNumber: pay.sender, advanceVerified: false };
+  }
+
   function submitOrder() {
     const name = document.getElementById('custName').value.trim();
     const phone = document.getElementById('custPhone').value.trim();
     const address = document.getElementById('custAddress').value.trim();
     if (!name || !phone || !address) { alert('অনুগ্রহ করে সব তথ্য পূরণ করুন।'); return; }
     if (!cart.length) return;
-    if (!(payCfg.enabled && payCfg.number)) { doSubmitOrder(null); return; }
+    if (!payBoxVisible()) { doSubmitOrder(null); return; }
+
+    const method = selectedPayMethod();
+    if (method === 'cod') { doSubmitOrder({ method: 'cod' }); return; }
 
     const sender = document.getElementById('paySender').value.trim();
     const trx = document.getElementById('payTrx').value.trim().toUpperCase();
@@ -1115,9 +1165,9 @@
     db.collection('orders').where('trxId', '==', trx).limit(1).get()
       .then(snap => {
         if (!snap.empty) { alert('এই TrxID দিয়ে আগেই একটি অর্ডার জমা হয়েছে। সঠিক TrxID দিন।'); return; }
-        doSubmitOrder({ sender, trx });
+        doSubmitOrder({ method, sender, trx });
       })
-      .catch(() => doSubmitOrder({ sender, trx }));
+      .catch(() => doSubmitOrder({ method, sender, trx }));
   }
 
   function copyPayNumber() {
@@ -1146,6 +1196,7 @@
     const totalAyna = cart.reduce((s, i) => s + (i.aynaCount || 0) * i.qty, 0);
     const othersText = cart.filter(i => !i.aynaCount).map(i => i.name + ' x' + i.qty).join(', ');
 
+    const pf = pay ? payFields(pay, t) : null;
     const orderData = {
       items: items,
       productName: items.map(i => i.productName + ' x' + i.quantity).join(', '),
@@ -1156,14 +1207,7 @@
       customerPhone: phone,
       customerAddress: address,
       status: 'pending',
-      ...(pay ? {
-        paymentMethod: 'cod_advance_delivery',
-        advancePaid: t.delivery,
-        dueOnDelivery: t.productTotal,
-        trxId: pay.trx,
-        senderNumber: pay.sender,
-        advanceVerified: false
-      } : {})
+      ...(pf || {})
     };
 
     db.collection('orders').add({
@@ -1180,7 +1224,7 @@
       document.getElementById('paySender').value = '';
       document.getElementById('payTrx').value = '';
       const toast = document.getElementById('toast');
-      toast.textContent = pay ? 'অর্ডার জমা হয়েছে! বিকাশ পেমেন্ট মিলিয়ে আমরা নিশ্চিত করব।' : 'অর্ডার সফলভাবে জমা হয়েছে!';
+      toast.textContent = (pay && pay.trx) ? 'অর্ডার জমা হয়েছে! বিকাশ পেমেন্ট মিলিয়ে আমরা নিশ্চিত করব।' : 'অর্ডার সফলভাবে জমা হয়েছে!';
 
       // Order Manager অ্যাপে পাঠানো হচ্ছে (ব্যর্থ হলেও কাস্টমারের অর্ডার প্রভাবিত হবে না)
       orderManagerDb.collection('incomingOrders').add({
@@ -1195,14 +1239,15 @@
         productTotal: t.productTotal,
         deliveryCharge: t.delivery,
         totalAmount: t.grandTotal,
-        advancePaid: pay ? t.delivery : 0,
-        dueOnDelivery: pay ? t.productTotal : t.grandTotal,
-        trxId: pay ? pay.trx : '',
+        paymentMethod: pf ? pf.paymentMethod : 'cod',
+        advancePaid: pf ? pf.advancePaid : 0,
+        dueOnDelivery: pf ? pf.dueOnDelivery : t.grandTotal,
+        trxId: (pf && pf.trxId) ? pf.trxId : '',
         processed: false,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }).catch(err => console.log('order manager sync failed', err));
       toast.style.display = 'block';
-      setTimeout(() => toast.style.display = 'none', pay ? 4500 : 2500);
+      setTimeout(() => toast.style.display = 'none', (pay && pay.trx) ? 4500 : 2500);
     }).catch(err => alert('ত্রুটি হয়েছে: ' + err.message));
   }
 
