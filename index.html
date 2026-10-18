@@ -355,6 +355,10 @@
   .pay-opt { display:flex; align-items:flex-start; gap:9px; margin:8px 0 !important; padding:10px 12px; border:2px solid var(--border); border-radius:12px; cursor:pointer; color:var(--ink) !important; font-size:13.5px !important; font-weight:600; background:#fff; line-height:1.5; }
   .pay-opt input { width:auto !important; margin-top:4px; }
   .pay-opt.sel { border-color:var(--primary); background:var(--primary-light); }
+
+  /* ভাসমান বাটন (কার্ট, হোয়াটসঅ্যাপ, উপরে যান) পপআপের নিচে থাকবে, যাতে বাটন ঢেকে না যায় */
+  .cart-fab, .whatsapp-fab { z-index:80; }
+  #toTop { z-index:79; }
 </style>
 </head>
 <body>
