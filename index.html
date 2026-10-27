@@ -359,6 +359,78 @@
   /* ভাসমান বাটন (কার্ট, হোয়াটসঅ্যাপ, উপরে যান) পপআপের নিচে থাকবে, যাতে বাটন ঢেকে না যায় */
   .cart-fab, .whatsapp-fab { z-index:80; }
   #toTop { z-index:79; }
+
+  /* ===== নতুন লেআউট: হেডার, সাইডবার, ছোট কার্ড ===== */
+  .topbar-inner { flex-wrap:wrap; row-gap:10px; }
+  .brand { order:1; }
+  .hdr-search { order:2; flex:1; max-width:520px; margin:0 auto; display:flex; align-items:center; gap:8px; background:#fff; border:2px solid var(--border); border-radius:999px; padding:4px 5px 4px 14px; transition:border-color .15s, box-shadow .15s; }
+  .hdr-search:focus-within { border-color:var(--primary); box-shadow:0 0 0 4px var(--primary-light); }
+  .hdr-search input { flex:1; min-width:0; border:none; outline:none; background:transparent; font-family:inherit; font-size:14px; color:var(--text); padding:7px 0; }
+  .hdr-search button { background:var(--accent); color:#fff; padding:8px 18px; font-size:13px; border-radius:999px; }
+  .hdr-search button:hover { background:#c8431f; }
+  .hdr-actions { order:3; display:flex; align-items:center; gap:8px; }
+  .hdr-btn { position:relative; display:inline-flex; align-items:center; gap:6px; background:#fff; color:var(--ink); border:1.5px solid var(--border); padding:8px 14px; border-radius:12px; font-size:13px; font-weight:700; font-family:inherit; text-decoration:none; cursor:pointer; white-space:nowrap; transition:background .15s, transform .15s; }
+  .hdr-btn:hover { background:var(--primary-light); transform:translateY(-1px); }
+  .hdr-btn.wa { background:#25D366; color:#fff; border-color:#25D366; }
+  .hdr-btn.wa:hover { background:#1fb857; }
+  .hdr-btn.bump { animation:fabBump .45s ease; }
+  .hdr-btn .cart-badge { top:-8px; right:-8px; }
+
+  .ticker { background:var(--ink); color:#fff; overflow:hidden; white-space:nowrap; font-size:13px; font-weight:600; padding:7px 0; }
+  .ticker span { display:inline-block; padding-left:100%; animation:tick 26s linear infinite; }
+  @keyframes tick { to { transform:translateX(-100%); } }
+  @media (prefers-reduced-motion: reduce) { .ticker span { padding-left:20px; } }
+
+  .layout { display:grid; grid-template-columns:250px minmax(0,1fr); gap:22px; align-items:start; padding-top:18px; }
+  .side { display:flex; flex-direction:column; gap:16px; position:sticky; top:76px; }
+  .side-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); overflow:hidden; }
+  .side-card h4 { font-size:14px; font-weight:800; padding:12px 14px; border-bottom:1px solid var(--border); color:var(--ink); }
+  .cat-list, .info-list { list-style:none; }
+  .cat-list button { display:flex; align-items:center; gap:8px; width:100%; text-align:left; background:none; color:var(--ink); padding:11px 14px; border-radius:0; font-size:13.5px; font-weight:600; border-bottom:1px solid #eef3f2; }
+  .cat-list li:last-child button { border-bottom:none; }
+  .cat-list button:hover { background:var(--bg); }
+  .cat-list button.active { background:#fdece7; color:var(--accent); font-weight:800; }
+  .info-list li { padding:9px 14px; font-size:12.5px; line-height:1.6; color:var(--text-muted); border-bottom:1px solid #eef3f2; }
+  .info-list li:last-child { border-bottom:none; }
+  .info-list b { color:var(--ink); }
+
+  .content .banner-wrap { margin:0; padding:0; max-width:none; }
+  .content .banner, .content .banner-track img { max-height:300px; }
+  .alert-bar { background:#fdece7; border:1px solid #f6c9bc; color:#9a3412; border-radius:12px; padding:10px 14px; font-size:13px; font-weight:600; margin-top:14px; line-height:1.6; }
+  .list-head { display:flex; align-items:baseline; justify-content:space-between; margin:18px 0 12px; gap:10px; }
+  .list-head h2 { font-size:19px; font-weight:800; color:var(--ink); }
+  .list-head span { font-size:12.5px; color:var(--text-muted); white-space:nowrap; }
+
+  @media (min-width:601px) { .grid { grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:16px; } }
+  .card-img img { aspect-ratio:1/1; }
+  .card-body { padding:10px 12px 12px; }
+  .card-body h3 { font-size:14px; margin-bottom:8px; flex:1; }
+  .card-row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .pr { font-weight:800; font-size:16px; color:var(--accent); line-height:1.2; font-family:'Bricolage Grotesque','Anek Bangla',sans-serif; }
+  .pr s { display:block; color:#98a6a3; font-size:11.5px; font-weight:500; }
+  .card-body button { width:auto; flex-shrink:0; padding:8px 13px; font-size:13px; border-radius:10px; background:var(--accent); white-space:nowrap; }
+  .card-body button:hover { background:#c8431f; }
+  .off-badge { top:8px; left:8px; font-size:11.5px; padding:3px 9px; }
+
+  @media (max-width:900px) {
+    .layout { display:flex; flex-direction:column; align-items:stretch; gap:14px; padding-top:12px; }
+    .side { display:contents; }
+    #catCard { order:1; }
+    .content { order:2; width:100%; }
+    #delCard, #payCard { order:3; }
+    #catCard h4 { display:none; }
+    .cat-list { display:flex; gap:8px; overflow-x:auto; padding:10px; }
+    .cat-list button { width:auto; white-space:nowrap; border:1.5px solid var(--border); border-radius:999px; padding:7px 14px; }
+    .cat-list button.active { border-color:var(--accent); }
+  }
+  @media (max-width:760px) {
+    .hdr-actions { order:2; margin-left:auto; }
+    .hdr-search { order:3; flex-basis:100%; max-width:none; }
+  }
+  @media (max-width:520px) {
+    .hdr-btn .t { display:none; }
+    .hdr-btn { padding:8px 11px; font-size:16px; }
+  }
 </style>
 </head>
 <body>
@@ -372,33 +444,50 @@
         <span class="sub">Craft & Art</span>
       </div>
     </div>
-    <div class="track-link"><a onclick="openTrackOrder()">📦 অর্ডার ট্র্যাক</a></div>
+    <div class="hdr-search">
+      <span>🔍</span>
+      <input type="text" id="searchBox" placeholder="পণ্যের নাম দিয়ে খুঁজুন..." oninput="applyFilters()">
+      <button type="button" onclick="applyFilters()">খুঁজুন</button>
+    </div>
+    <div class="hdr-actions">
+      <button type="button" class="hdr-btn" onclick="openTrackOrder()">📦 <span class="t">অর্ডার</span></button>
+      <button type="button" class="hdr-btn" id="hdrCart" onclick="openCart()">🛒 <span class="t">কার্ট</span><span class="cart-badge" id="cartBadge" style="display:none;">0</span></button>
+      <a class="hdr-btn wa" id="whatsappFab" href="#" target="_blank" rel="noopener" style="display:none;">💬 <span class="t">WhatsApp</span></a>
+    </div>
   </div>
 </header>
 
-<div class="banner-wrap" id="bannerSection">
-  <div class="banner" id="bannerWrap">
-    <div class="banner-track" id="bannerTrack"></div>
-    <div class="banner-dots" id="bannerDots"></div>
-  </div>
-</div>
+<div class="ticker" id="ticker" style="display:none;"><span id="tickerText"></span></div>
 
-<div class="container" id="listView">
-  <div class="section-title">আমাদের পণ্যসমূহ</div>
-  <div class="tools">
-    <input type="text" class="search-box" id="searchBox" placeholder="🔍 পণ্যের নাম দিয়ে খুঁজুন..." oninput="applyFilters()">
-    <div class="category-row" id="categoryRow" style="display:none;">
-      <button class="category-btn" onclick="openCategoryPopup()">
-        <span id="categoryBtnLabel">🏷️ সব ক্যাটাগরি</span>
-        <span>▾</span>
-      </button>
+<div class="container layout" id="listView">
+  <aside class="side">
+    <div class="side-card" id="catCard">
+      <h4>🗂️ ক্যাটাগরি</h4>
+      <ul class="cat-list" id="catList"></ul>
     </div>
-  </div>
-  <div id="productGrid" class="grid"><p id="loadingMsg" class="empty" style="grid-column:1/-1;">পণ্য লোড হচ্ছে...</p></div>
-  <!-- STATIC_PRODUCTS_START -->
-  <noscript><p class="empty">পণ্য দেখতে ব্রাউজারে JavaScript চালু করুন, অথবা অর্ডারের জন্য আমাদের সাথে সরাসরি যোগাযোগ করুন।</p></noscript>
-  <!-- STATIC_PRODUCTS_END -->
-  <div id="emptyMsg" class="empty" style="display:none;"></div>
+    <div class="side-card" id="delCard">
+      <h4>🚚 ডেলিভারি তথ্য</h4>
+      <ul class="info-list" id="delInfo"></ul>
+    </div>
+    <div class="side-card" id="payCard">
+      <h4>💳 পেমেন্ট</h4>
+      <ul class="info-list" id="payInfo"></ul>
+    </div>
+  </aside>
+
+  <section class="content">
+    <div class="banner-wrap" id="bannerSection">
+      <div class="banner" id="bannerWrap">
+        <div class="banner-track" id="bannerTrack"></div>
+        <div class="banner-dots" id="bannerDots"></div>
+      </div>
+    </div>
+    <div class="alert-bar" id="alertBar" style="display:none;"></div>
+    <div class="list-head"><h2 id="listTitle">সব পণ্য</h2><span id="prodCount"></span></div>
+    <div id="productGrid" class="grid"><p id="loadingMsg" class="empty" style="grid-column:1/-1;">পণ্য লোড হচ্ছে...</p></div>
+    <noscript><p class="empty">পণ্য দেখতে ব্রাউজারে JavaScript চালু করুন, অথবা অর্ডারের জন্য আমাদের সাথে সরাসরি যোগাযোগ করুন।</p></noscript>
+    <div id="emptyMsg" class="empty" style="display:none;"></div>
+  </section>
 </div>
 
 <!-- Product Page -->
@@ -432,10 +521,8 @@
   </div>
 </div>
 
-<footer>© Anabiya Craft & Art · <a href="/products.html" style="color:inherit;">সব পণ্যের তালিকা</a></footer>
+<footer>© Anabiya Craft & Art</footer>
 
-<button class="cart-fab" onclick="openCart()">🛒<span class="cart-badge" id="cartBadge" style="display:none;">0</span></button>
-<a class="whatsapp-fab" id="whatsappFab" href="#" target="_blank" rel="noopener">💬</a>
 
 <!-- Cart Modal -->
 <div class="modal-bg" id="cartModalBg">
@@ -626,13 +713,22 @@
   }
 
   function updateCategoryUI() {
-    const cats = [...new Set(allProducts.map(p => p.category).filter(c => c && c.trim()))];
-    const row = document.getElementById('categoryRow');
-    if (!cats.length) { row.style.display = 'none'; return; }
-    row.style.display = 'block';
-    document.getElementById('categoryBtnLabel').textContent =
-      '🏷️ ' + (selectedCategory === 'all' ? 'সব ক্যাটাগরি' : selectedCategory);
-    renderCategoryModalList(cats);
+    const cats = [...new Set(allProducts.map(p => p.category).filter(c => typeof c === 'string' && c.trim()))];
+    const list = document.getElementById('catList');
+    list.innerHTML = '';
+    const mk = (label, val, icon) => {
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = selectedCategory === val ? 'active' : '';
+      b.textContent = icon + ' ' + label;
+      b.onclick = () => selectCategory(val);
+      li.appendChild(b);
+      list.appendChild(li);
+    };
+    mk('সব পণ্য', 'all', '🛍️');
+    cats.forEach(c => mk(c, c, '🏷️'));
+    document.getElementById('catCard').style.display = cats.length ? '' : 'none';
   }
 
   function renderCategoryModalList(cats) {
@@ -675,8 +771,10 @@
       filtered = filtered.filter(p => p.category === selectedCategory);
     }
     if (query) {
-      filtered = filtered.filter(p => (p.name || '').toLowerCase().includes(query));
+      filtered = filtered.filter(p => (typeof p.name === 'string' ? p.name : '').toLowerCase().includes(query));
     }
+    document.getElementById('listTitle').textContent = selectedCategory === 'all' ? 'সব পণ্য' : selectedCategory;
+    document.getElementById('prodCount').textContent = Number(filtered.length).toLocaleString('bn-BD') + 'টি পণ্য';
     renderProductGrid(filtered);
   }
 
@@ -688,6 +786,9 @@
   function priceOf(p) { return hasOffer(p) ? Number(p.offerPrice) : Number(p.price); }
   function priceHtml(p) {
     return hasOffer(p) ? '<s class="old-price">৳ ' + p.price + '</s>৳ ' + p.offerPrice : '৳ ' + p.price;
+  }
+  function cardPrice(p) {
+    return hasOffer(p) ? '৳' + p.offerPrice + '<s>৳' + p.price + '</s>' : '৳' + p.price;
   }
   function offerBadge(p) {
     if (!hasOffer(p)) return '';
@@ -702,6 +803,7 @@
     if (!products.length) {
       emptyMsg.style.display = 'block';
       emptyMsg.textContent = allProducts.length ? 'কোনো পণ্য পাওয়া যায়নি।' : 'এখনো কোনো পণ্য যোগ করা হয়নি।';
+      animateGrid = false;
       return;
     }
     emptyMsg.style.display = 'none';
@@ -715,16 +817,46 @@
         card.classList.add('reveal');
         card.style.setProperty('--d', ((idx % cols) * 80) + 'ms');
       }
-      card.innerHTML = `
-        <div class="card-img">
-          <img src="${thumb}" alt="${p.name}" onclick='openProductDetail(${JSON.stringify(p.id)})'>
-          ${offerBadge(p)}
-          <div class="price">${priceHtml(p)}</div>
-        </div>
-        <div class="card-body">
-          <h3 onclick='openProductDetail(${JSON.stringify(p.id)})' style="cursor:pointer;">${p.name}</h3>
-          <button onclick='addToCart(${JSON.stringify(p.id)}, ${JSON.stringify(p.name)}, ${JSON.stringify(priceOf(p))}, ${JSON.stringify(thumb)}, ${JSON.stringify(p.boroCount||0)}, ${JSON.stringify(p.chotoCount||0)}, ${p.isMirror ? 1 : 0})'>🛒 কার্টে যোগ করুন</button>
-        </div>`;
+
+      const imageBox = document.createElement('div');
+      imageBox.className = 'card-img';
+      const img = document.createElement('img');
+      img.src = thumb;
+      img.alt = p.name || 'পণ্য';
+      img.addEventListener('click', () => openProductDetail(p.id));
+      imageBox.appendChild(img);
+      if (hasOffer(p)) {
+        const badge = document.createElement('div');
+        badge.className = 'off-badge';
+        badge.textContent = Math.round((1 - Number(p.offerPrice) / Number(p.price)) * 100).toLocaleString('bn-BD') + '% ছাড়';
+        imageBox.appendChild(badge);
+      }
+
+      const body = document.createElement('div');
+      body.className = 'card-body';
+      const title = document.createElement('h3');
+      title.textContent = p.name || '';
+      title.style.cursor = 'pointer';
+      title.addEventListener('click', () => openProductDetail(p.id));
+      const row = document.createElement('div');
+      row.className = 'card-row';
+      const price = document.createElement('div');
+      price.className = 'pr';
+      if (hasOffer(p)) {
+        const oldPrice = document.createElement('s');
+        oldPrice.textContent = '৳' + Number(p.price).toLocaleString('bn-BD');
+        price.appendChild(oldPrice);
+      }
+      price.appendChild(document.createTextNode('৳' + priceOf(p).toLocaleString('bn-BD')));
+      const addButton = document.createElement('button');
+      addButton.type = 'button';
+      addButton.textContent = '+ কার্ট';
+      addButton.addEventListener('click', () => addToCart(
+        p.id, p.name || '', priceOf(p), thumb, p.boroCount || 0, p.chotoCount || 0, p.isMirror ? 1 : 0
+      ));
+      row.append(price, addButton);
+      body.append(title, row);
+      card.append(imageBox, body);
       grid.appendChild(card);
       if (animateGrid && window.observeReveal) window.observeReveal(card);
     });
@@ -765,25 +897,43 @@
         docs.forEach(doc => {
           const o = doc.data();
           const items = (o.items && o.items.length) ? o.items : [{ productName: o.productName, quantity: o.quantity }];
-          const itemsText = items.map(i => `${i.productName} x${i.quantity}`).join(', ');
+          const itemsText = items.map(i => `${i.productName || 'পণ্য'} x${Number(i.quantity) || 0}`).join(', ');
           const statusText = o.status === 'done' ? 'সম্পন্ন' : 'পেন্ডিং';
           const statusClass = o.status === 'done' ? 'done' : 'pending';
           const div = document.createElement('div');
           div.className = 'order-track-item';
-          div.innerHTML = `
-            <div class="otop">
-              <span>${itemsText}</span>
-              <span class="status-pill ${statusClass}">${statusText}</span>
-            </div>
-            <div>সর্বমোট: ৳${o.totalAmount ?? '—'}</div>${o.trxId ? `
-            <div style="margin-top:6px;">${o.paymentMethod === 'advance_full' ? 'পুরো টাকা অগ্রিম' : 'অগ্রিম ডেলিভারি চার্জ'}: ৳${Number(o.advancePaid) || 0} — ${o.advanceVerified ? '<b style="color:#0b5a37;">✅ বিকাশে মিলেছে</b>' : '<b style="color:#7a5a00;">⏳ যাচাই চলছে</b>'}</div>
-            <div>ডেলিভারির সময় দিতে হবে: <b>৳${Number(o.dueOnDelivery) || 0}</b></div>` : (o.paymentMethod === 'cod' ? `
-            <div style="margin-top:6px;">পেমেন্ট: ক্যাশ অন ডেলিভারি (ডেলিভারিতে দিতে হবে <b>৳${Number(o.dueOnDelivery) || 0}</b>)</div>` : '')}`;
+          const top = document.createElement('div');
+          top.className = 'otop';
+          const itemLabel = document.createElement('span');
+          itemLabel.textContent = itemsText;
+          const status = document.createElement('span');
+          status.className = 'status-pill ' + statusClass;
+          status.textContent = statusText;
+          top.append(itemLabel, status);
+          const total = document.createElement('div');
+          total.textContent = 'সর্বমোট: ৳' + (Number(o.totalAmount) || '—');
+          div.append(top, total);
+          if (o.trxId) {
+            const advance = document.createElement('div');
+            advance.style.marginTop = '6px';
+            advance.textContent = (o.paymentMethod === 'advance_full' ? 'পুরো টাকা অগ্রিম' : 'অগ্রিম ডেলিভারি চার্জ') + ': ৳' + (Number(o.advancePaid) || 0) + ' — ' + (o.advanceVerified ? '✅ বিকাশে মিলেছে' : '⏳ যাচাই চলছে');
+            const due = document.createElement('div');
+            due.textContent = 'ডেলিভারির সময় দিতে হবে: ৳' + (Number(o.dueOnDelivery) || 0);
+            div.append(advance, due);
+          } else if (o.paymentMethod === 'cod') {
+            const cod = document.createElement('div');
+            cod.style.marginTop = '6px';
+            cod.textContent = 'পেমেন্ট: ক্যাশ অন ডেলিভারি (ডেলিভারিতে দিতে হবে ৳' + (Number(o.dueOnDelivery) || 0) + ')';
+            div.appendChild(cod);
+          }
           results.appendChild(div);
         });
       })
       .catch(err => {
-        results.innerHTML = '<p style="text-align:center;color:#c0392b;">ত্রুটি: ' + err.message + '</p>';
+        const error = document.createElement('p');
+        error.style.cssText = 'text-align:center;color:#c0392b;';
+        error.textContent = 'ত্রুটি: ' + (err.message || 'অজানা সমস্যা');
+        results.replaceChildren(error);
       });
   }
 
@@ -976,6 +1126,7 @@
         if (typeof d.extra === 'number') DELIVERY_EXTRA = d.extra;
       }
       if (document.getElementById('cartModalBg').style.display === 'flex') renderCart();
+      renderSideInfo();
     });
   }
 
@@ -1016,7 +1167,7 @@
     else cart.push({ id, name, price, image, qty: 1, boroCount: boroCount || 0, chotoCount: chotoCount || 0, aynaCount: aynaCount || 0 });
     trackPixel('AddToCart', { content_ids: [id], content_name: name, content_type: 'product', value: Number(price) || 0, currency: 'BDT' });
     updateCartBadge();
-    const fab = document.querySelector('.cart-fab');
+    const fab = document.getElementById('hdrCart');
     if (fab) { fab.classList.remove('bump'); void fab.offsetWidth; fab.classList.add('bump'); }
     const toast = document.getElementById('toast');
     toast.textContent = name + ' কার্টে যোগ হয়েছে';
@@ -1057,18 +1208,37 @@
     cart.forEach(item => {
       const row = document.createElement('div');
       row.className = 'cart-item';
-      row.innerHTML = `
-        <img src="${item.image}">
-        <div class="cart-item-info">
-          <h4>${item.name}</h4>
-          <div>৳${item.price}</div>
-          <div class="qty-control">
-            <button onclick="changeQty('${item.id}', -1)">−</button>
-            <span>${item.qty}</span>
-            <button onclick="changeQty('${item.id}', 1)">+</button>
-            <button class="cart-remove" onclick="removeFromCart('${item.id}')">মুছুন</button>
-          </div>
-        </div>`;
+      const img = document.createElement('img');
+      img.src = item.image || 'https://via.placeholder.com/100?text=Product';
+      img.alt = item.name || 'পণ্য';
+      const info = document.createElement('div');
+      info.className = 'cart-item-info';
+      const name = document.createElement('h4');
+      name.textContent = item.name || 'পণ্য';
+      const price = document.createElement('div');
+      price.textContent = '৳' + Number(item.price || 0).toLocaleString('bn-BD');
+      const controls = document.createElement('div');
+      controls.className = 'qty-control';
+      const minus = document.createElement('button');
+      minus.type = 'button';
+      minus.textContent = '−';
+      minus.setAttribute('aria-label', 'একটি কমান');
+      minus.addEventListener('click', () => changeQty(item.id, -1));
+      const quantity = document.createElement('span');
+      quantity.textContent = item.qty;
+      const plus = document.createElement('button');
+      plus.type = 'button';
+      plus.textContent = '+';
+      plus.setAttribute('aria-label', 'একটি বাড়ান');
+      plus.addEventListener('click', () => changeQty(item.id, 1));
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'cart-remove';
+      remove.textContent = 'মুছুন';
+      remove.addEventListener('click', () => removeFromCart(item.id));
+      controls.append(minus, quantity, plus, remove);
+      info.append(name, price, controls);
+      row.append(img, info);
       list.appendChild(row);
     });
 
@@ -1328,10 +1498,44 @@
     });
   }
 
+  // বাঁদিকের ডেলিভারি ও পেমেন্ট কার্ড
+  function renderSideInfo() {
+    const bn = n => Number(n).toLocaleString('bn-BD');
+    document.getElementById('delInfo').innerHTML =
+      '<li>প্রথম পার্সেল: <b>৳' + bn(DELIVERY_FIRST) + '</b></li>' +
+      '<li>প্রতিটি অতিরিক্ত পার্সেল: <b>৳' + bn(DELIVERY_EXTRA) + '</b></li>' +
+      '<li>সারা বাংলাদেশে হোম ডেলিভারি</li>' +
+      '<li>কিছু পণ্যে রেট আলাদা হতে পারে, কার্টে সঠিক চার্জ দেখতে পাবেন।</li>';
+    const items = [];
+    const bk = payCfg && payCfg.enabled && payCfg.number;
+    if (!bk || payCfg.allowCod !== false) items.push('💵 ক্যাশ অন ডেলিভারি');
+    if (bk) {
+      if (payCfg.allowDelivery !== false) items.push('📲 বিকাশে আগে শুধু ডেলিভারি চার্জ, বাকি ডেলিভারিতে');
+      if (payCfg.allowFull !== false) items.push('📲 বিকাশে পুরো টাকা আগে');
+    }
+    document.getElementById('payInfo').innerHTML = items.map(t => '<li>' + t + '</li>').join('');
+  }
+
+  // স্ক্রলিং স্ট্রিপ ও নোটিশ বার (অ্যাডমিন থেকে)
+  const DEFAULT_TICKER = '🚚 সারা বাংলাদেশে হোম ডেলিভারি  •  💵 ক্যাশ অন ডেলিভারি সুবিধা  •  ✨ হাতে তৈরি ক্রাফট ও আর্ট';
+  function loadNotice() {
+    db.collection('settings').doc('notice').onSnapshot(doc => {
+      const d = doc.exists ? doc.data() : null;
+      const tk = d ? (d.ticker || '') : DEFAULT_TICKER;
+      const al = d ? (d.alert || '') : '';
+      const tkEl = document.getElementById('ticker');
+      document.getElementById('tickerText').textContent = tk;
+      tkEl.style.display = tk ? 'block' : 'none';
+      const alEl = document.getElementById('alertBar');
+      alEl.textContent = al;
+      alEl.style.display = al ? 'block' : 'none';
+    });
+  }
+
   // অগ্রিম ডেলিভারি চার্জ (বিকাশ) সেটিংস, অ্যাডমিন থেকে লাইভ আসে
   let payCfg = { enabled: false };
   function loadPaymentCfg() {
-    db.collection('settings').doc('payment').onSnapshot(doc => { payCfg = doc.exists ? doc.data() : { enabled: false }; });
+    db.collection('settings').doc('payment').onSnapshot(doc => { payCfg = doc.exists ? doc.data() : { enabled: false }; renderSideInfo(); });
   }
 
   renderRoute();
@@ -1342,6 +1546,8 @@
   loadLogo();
   loadDelivery();
   loadPaymentCfg();
+  loadNotice();
+  renderSideInfo();
 </script>
 
 <!-- ===== Scroll reveal & micro-interactions ===== -->
@@ -1405,7 +1611,7 @@
 
   /* ---- Fly-to-cart ---- */
   function flyToCart(src) {
-    const fab = document.querySelector('.cart-fab');
+    const fab = document.getElementById('hdrCart');
     if (!src || !fab || reduce) return;
     const a = src.getBoundingClientRect(), b = fab.getBoundingClientRect();
     const clone = document.createElement('img');
@@ -1452,7 +1658,7 @@
     }
 
     if (isAdd && txt) {
-      txt.nodeValue = '✓ যোগ হয়েছে';
+      txt.nodeValue = '✓ যোগ হলো';
       el.classList.add('btn-added');
       clearTimeout(el._t);
       el._t = setTimeout(() => {
