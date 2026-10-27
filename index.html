@@ -1390,6 +1390,7 @@
     }).then(() => {
       document.getElementById('checkoutModalBg').style.display = 'none';
       trackPixel('Purchase', { value: t.grandTotal, currency: 'BDT', num_items: t.totalQty, content_ids: cart.map(i => i.id), content_type: 'product' });
+      notifyOwner(t, pay, orderData.productName);
       cart = [];
       updateCartBadge();
       document.getElementById('custName').value = '';
@@ -1496,6 +1497,28 @@
         img.style.display = 'none';
       }
     });
+  }
+
+  // ফোনে নতুন অর্ডারের নোটিফিকেশন (ntfy.sh)। ফোনের ntfy অ্যাপে এই টপিকটা সাবস্ক্রাইব করতে হবে।
+  // এখানে শুধু মোট টাকা, পণ্যের নাম ও পেমেন্টের ধরন যায়, ক্রেতার নাম/ফোন/ঠিকানা যায় না।
+  const NTFY_TOPIC = 'anabiya-orders-xfef1qm2yuvcftny';
+  function notifyOwner(t, pay, itemsText) {
+    if (!NTFY_TOPIC) return;
+    const how = (!pay || pay.method === 'cod') ? 'ক্যাশ অন ডেলিভারি'
+      : (pay.method === 'advance_full' ? 'পুরো টাকা বিকাশে (যাচাই বাকি)' : 'ডেলিভারি চার্জ বিকাশে (যাচাই বাকি)');
+    try {
+      fetch('https://ntfy.sh/', {
+        method: 'POST',
+        keepalive: true,
+        body: JSON.stringify({
+          topic: NTFY_TOPIC,
+          title: '🛍️ নতুন অর্ডার এসেছে',
+          message: String(itemsText || '').slice(0, 120) + '\nমোট ৳' + t.grandTotal + ' • ' + how,
+          priority: 4,
+          tags: ['shopping_cart']
+        })
+      }).catch(() => {});
+    } catch (e) {}
   }
 
   // বাঁদিকের ডেলিভারি ও পেমেন্ট কার্ড
