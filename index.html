@@ -241,6 +241,10 @@
   .pp-order:hover { background:#e0a200; }
   .pp-add { background:var(--ink); }
   .pp-add:hover { background:var(--primary); }
+  .size-chip { min-width:48px; padding:9px 14px; border:2px solid var(--border); background:#fff; color:var(--ink); border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; }
+  .size-chip.sel { background:var(--ink); color:#fff; border-color:var(--ink); }
+  #detailSizes.warn { animation:sizeShake .4s; }
+  @keyframes sizeShake { 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
   .pp-copy { margin-top:14px; padding:6px 13px; font-size:12px; font-weight:600; background:transparent; color:var(--text-muted); border:1.5px solid var(--border); }
   .pp-copy:hover { background:var(--primary-light); color:var(--primary); border-color:var(--primary); }
   @media (max-width:760px) {
@@ -502,6 +506,10 @@
       <h1 class="pp-name" id="detailName"></h1>
       <div class="detail-price" id="detailPrice"></div>
       <div class="detail-desc" id="detailDesc"></div>
+      <div id="detailSizes" style="display:none;margin-bottom:18px;">
+        <div style="font-weight:700;margin-bottom:8px;">সাইজ বাছুন</div>
+        <div id="detailSizeChips" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+      </div>
       <div id="detailActions">
         <div class="pp-actions">
           <button class="pp-order" id="detailOrderBtn" onclick="orderNow()">⚡ অর্ডার করুন</button>
@@ -851,9 +859,11 @@
       const addButton = document.createElement('button');
       addButton.type = 'button';
       addButton.textContent = '+ কার্ট';
-      addButton.addEventListener('click', () => addToCart(
-        p.id, p.name || '', priceOf(p), thumb, p.boroCount || 0, p.chotoCount || 0, p.isMirror ? 1 : 0
-      ));
+      if (needSize(p)) addButton.dataset.needsize = '1';
+      addButton.addEventListener('click', () => {
+        if (needSize(p)) { openProductDetail(p.id); return; }
+        addToCart(p.id, p.name || '', priceOf(p), thumb, p.boroCount || 0, p.chotoCount || 0, p.isMirror ? 1 : 0);
+      });
       row.append(price, addButton);
       body.append(title, row);
       card.append(imageBox, body);
@@ -897,7 +907,7 @@
         docs.forEach(doc => {
           const o = doc.data();
           const items = (o.items && o.items.length) ? o.items : [{ productName: o.productName, quantity: o.quantity }];
-          const itemsText = items.map(i => `${i.productName || 'পণ্য'} x${Number(i.quantity) || 0}`).join(', ');
+          const itemsText = items.map(i => `${i.productName || 'পণ্য'}${i.size ? ' (সাইজ: ' + i.size + ')' : ''} x${Number(i.quantity) || 0}`).join(', ');
           const statusText = o.status === 'done' ? 'সম্পন্ন' : 'পেন্ডিং';
           const statusClass = o.status === 'done' ? 'done' : 'pending';
           const div = document.createElement('div');
@@ -972,13 +982,42 @@
     }
   }
 
+  let selectedSize = '';
+  function needSize(p) { return !!(p && p.sizes && p.sizes.length); }
+  function sizeWarn() {
+    const box = document.getElementById('detailSizes');
+    box.classList.remove('warn'); void box.offsetWidth; box.classList.add('warn');
+    const toast = document.getElementById('toast');
+    toast.textContent = 'অনুগ্রহ করে আগে সাইজ বাছুন';
+    toast.style.display = 'block';
+    setTimeout(() => toast.style.display = 'none', 1800);
+  }
+  function renderDetailSizes(p) {
+    const box = document.getElementById('detailSizes');
+    const chips = document.getElementById('detailSizeChips');
+    chips.innerHTML = '';
+    if (!needSize(p)) { box.style.display = 'none'; selectedSize = ''; return; }
+    box.style.display = '';
+    p.sizes.forEach(sz => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'size-chip' + (sz === selectedSize ? ' sel' : '');
+      b.textContent = sz;
+      b.addEventListener('click', () => { selectedSize = sz; renderDetailSizes(p); });
+      chips.appendChild(b);
+    });
+    const addBtn = document.getElementById('detailAddBtn');
+    if (addBtn) addBtn.dataset.needsize = selectedSize ? '' : '1';
+  }
+
   function orderNow() {
     const id = getRouteId();
     const p = allProducts.find(x => x.id === id);
     if (!p) return;
     const images = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
-    if (!cart.find(i => i.id === p.id)) {
-      addToCart(p.id, p.name, priceOf(p), images[0] || 'https://via.placeholder.com/300x200?text=No+Image', p.boroCount || 0, p.chotoCount || 0, p.isMirror ? 1 : 0);
+    if (needSize(p) && !selectedSize) { sizeWarn(); return; }
+    if (!cart.find(i => i.key === p.id + '|' + selectedSize)) {
+      addToCart(p.id, p.name, priceOf(p), images[0] || 'https://via.placeholder.com/300x200?text=No+Image', p.boroCount || 0, p.chotoCount || 0, p.isMirror ? 1 : 0, selectedSize);
     }
     goToCheckout();
   }
@@ -1038,6 +1077,7 @@
     detailImages = images.length ? images : ['https://via.placeholder.com/400x300?text=No+Image'];
     if (lastShownId !== id) {
       detailIndex = 0;
+      selectedSize = '';
       window.scrollTo(0, 0);
       trackPixel('ViewContent', { content_ids: [p.id], content_name: p.name, content_type: 'product', value: priceOf(p) || 0, currency: 'BDT' });
     }
@@ -1050,7 +1090,11 @@
     document.getElementById('detailDesc').textContent = p.description || '';
     const addBtn = document.getElementById('detailAddBtn');
     document.getElementById('detailActions').style.display = '';
-    addBtn.onclick = () => addToCart(p.id, p.name, priceOf(p), detailImages[0], p.boroCount || 0, p.chotoCount || 0, p.isMirror ? 1 : 0);
+    renderDetailSizes(p);
+    addBtn.onclick = () => {
+      if (needSize(p) && !selectedSize) { sizeWarn(); return; }
+      addToCart(p.id, p.name, priceOf(p), detailImages[0], p.boroCount || 0, p.chotoCount || 0, p.isMirror ? 1 : 0, selectedSize);
+    };
     document.title = p.name + ' | Anabiya Craft & Art';
   }
 
@@ -1161,31 +1205,33 @@
     else badge.style.display = 'none';
   }
 
-  function addToCart(id, name, price, image, boroCount, chotoCount, aynaCount) {
-    const existing = cart.find(i => i.id === id);
+  function addToCart(id, name, price, image, boroCount, chotoCount, aynaCount, size) {
+    size = size || '';
+    const key = id + '|' + size;
+    const existing = cart.find(i => i.key === key);
     if (existing) existing.qty++;
-    else cart.push({ id, name, price, image, qty: 1, boroCount: boroCount || 0, chotoCount: chotoCount || 0, aynaCount: aynaCount || 0 });
+    else cart.push({ key, id, size, name, price, image, qty: 1, boroCount: boroCount || 0, chotoCount: chotoCount || 0, aynaCount: aynaCount || 0 });
     trackPixel('AddToCart', { content_ids: [id], content_name: name, content_type: 'product', value: Number(price) || 0, currency: 'BDT' });
     updateCartBadge();
     const fab = document.getElementById('hdrCart');
     if (fab) { fab.classList.remove('bump'); void fab.offsetWidth; fab.classList.add('bump'); }
     const toast = document.getElementById('toast');
-    toast.textContent = name + ' কার্টে যোগ হয়েছে';
+    toast.textContent = name + (size ? ' (' + size + ')' : '') + ' কার্টে যোগ হয়েছে';
     toast.style.display = 'block';
     setTimeout(() => toast.style.display = 'none', 1500);
   }
 
-  function changeQty(id, delta) {
-    const item = cart.find(i => i.id === id);
+  function changeQty(key, delta) {
+    const item = cart.find(i => i.key === key);
     if (!item) return;
     item.qty += delta;
-    if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+    if (item.qty <= 0) cart = cart.filter(i => i.key !== key);
     updateCartBadge();
     renderCart();
   }
 
-  function removeFromCart(id) {
-    cart = cart.filter(i => i.id !== id);
+  function removeFromCart(key) {
+    cart = cart.filter(i => i.key !== key);
     updateCartBadge();
     renderCart();
   }
@@ -1214,7 +1260,7 @@
       const info = document.createElement('div');
       info.className = 'cart-item-info';
       const name = document.createElement('h4');
-      name.textContent = item.name || 'পণ্য';
+      name.textContent = (item.name || 'পণ্য') + (item.size ? ' — সাইজ: ' + item.size : '');
       const price = document.createElement('div');
       price.textContent = '৳' + Number(item.price || 0).toLocaleString('bn-BD');
       const controls = document.createElement('div');
@@ -1223,19 +1269,19 @@
       minus.type = 'button';
       minus.textContent = '−';
       minus.setAttribute('aria-label', 'একটি কমান');
-      minus.addEventListener('click', () => changeQty(item.id, -1));
+      minus.addEventListener('click', () => changeQty(item.key, -1));
       const quantity = document.createElement('span');
       quantity.textContent = item.qty;
       const plus = document.createElement('button');
       plus.type = 'button';
       plus.textContent = '+';
       plus.setAttribute('aria-label', 'একটি বাড়ান');
-      plus.addEventListener('click', () => changeQty(item.id, 1));
+      plus.addEventListener('click', () => changeQty(item.key, 1));
       const remove = document.createElement('button');
       remove.type = 'button';
       remove.className = 'cart-remove';
       remove.textContent = 'মুছুন';
-      remove.addEventListener('click', () => removeFromCart(item.id));
+      remove.addEventListener('click', () => removeFromCart(item.key));
       controls.append(minus, quantity, plus, remove);
       info.append(name, price, controls);
       row.append(img, info);
@@ -1364,7 +1410,7 @@
     if (!cart.length) return;
 
     const t = cartTotals();
-    const items = cart.map(i => ({ productId: i.id, productName: i.name, price: i.price, quantity: i.qty, image: i.image }));
+    const items = cart.map(i => ({ productId: i.id, productName: i.name, price: i.price, quantity: i.qty, image: i.image, size: i.size || '' }));
     const totalBoro = cart.reduce((s, i) => s + (i.boroCount || 0) * i.qty, 0);
     const totalChoto = cart.reduce((s, i) => s + (i.chotoCount || 0) * i.qty, 0);
     const totalAyna = cart.reduce((s, i) => s + (i.aynaCount || 0) * i.qty, 0);
@@ -1373,7 +1419,7 @@
     const pf = pay ? payFields(pay, t) : null;
     const orderData = {
       items: items,
-      productName: items.map(i => i.productName + ' x' + i.quantity).join(', '),
+      productName: items.map(i => i.productName + (i.size ? ' (' + i.size + ')' : '') + ' x' + i.quantity).join(', '),
       quantity: t.totalQty,
       deliveryCharge: t.delivery,
       totalAmount: t.grandTotal,
@@ -1664,7 +1710,7 @@
     const el = e.target.closest(RIPPLE_SEL);
     if (!el) return;
 
-    const isAdd = el.matches('.card-body button, #detailAddBtn');
+    const isAdd = el.matches('.card-body button, #detailAddBtn') && el.dataset.needsize !== '1';
     const txt = isAdd ? [...el.childNodes].find(n => n.nodeType === 3) : null;
     if (isAdd && txt && !el.dataset.orig) el.dataset.orig = txt.nodeValue;
 
