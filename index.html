@@ -441,7 +441,7 @@
 
 <header class="topbar">
   <div class="topbar-inner">
-    <div class="brand">
+    <div class="brand" onclick="goHome(); window.scrollTo({top:0,behavior:'smooth'});" style="cursor:pointer;" role="link" aria-label="হোম পেজ">
       <img class="logo" id="shopLogo" style="display:none;" alt="logo">
       <div class="brand-text">
         <span class="main" id="shopMain">Anabiya</span>
@@ -530,6 +530,9 @@
 </div>
 
 <footer>© Anabiya Craft & Art</footer>
+
+<a class="whatsapp-fab" id="whatsappFloat" href="#" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>
+<button type="button" class="cart-fab" id="cartFab" onclick="openCart()" aria-label="কার্ট">🛒<span class="cart-badge" id="cartBadge2" style="display:none;">0</span></button>
 
 
 <!-- Cart Modal -->
@@ -1203,6 +1206,8 @@
     const count = cart.reduce((s, i) => s + i.qty, 0);
     if (count > 0) { badge.style.display = 'flex'; badge.textContent = count; }
     else badge.style.display = 'none';
+    const b2 = document.getElementById('cartBadge2');
+    if (b2) { if (count > 0) { b2.style.display = 'flex'; b2.textContent = count; } else b2.style.display = 'none'; }
   }
 
   function addToCart(id, name, price, image, boroCount, chotoCount, aynaCount, size) {
@@ -1215,6 +1220,8 @@
     updateCartBadge();
     const fab = document.getElementById('hdrCart');
     if (fab) { fab.classList.remove('bump'); void fab.offsetWidth; fab.classList.add('bump'); }
+    const fab2 = document.getElementById('cartFab');
+    if (fab2) { fab2.classList.remove('bump'); void fab2.offsetWidth; fab2.classList.add('bump'); }
     const toast = document.getElementById('toast');
     toast.textContent = name + (size ? ' (' + size + ')' : '') + ' কার্টে যোগ হয়েছে';
     toast.style.display = 'block';
@@ -1505,6 +1512,8 @@
         const number = data.whatsapp.replace(/[^0-9]/g, '');
         fab.href = 'https://wa.me/' + number;
         fab.style.display = 'flex';
+        const wf = document.getElementById('whatsappFloat');
+        if (wf) { wf.href = 'https://wa.me/' + number; wf.style.display = 'flex'; }
         const waIcon = document.createElement('a');
         waIcon.className = 'wa';
         waIcon.href = 'https://wa.me/' + number;
@@ -1515,6 +1524,7 @@
         aboutHasSocial = true;
       } else {
         fab.style.display = 'none';
+        const wf0 = document.getElementById('whatsappFloat'); if (wf0) wf0.style.display = 'none';
       }
 
       if (data.facebook) {
