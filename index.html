@@ -111,6 +111,14 @@
   .category-btn { display:inline-flex; align-items:center; gap:8px; padding:12px 18px; border:2px solid var(--ink); border-radius:999px; font-size:13px; font-weight:700; background:var(--surface); color:var(--ink); cursor:pointer; }
   .category-btn:hover { background:var(--ink); color:#fff; }
 
+  .cat-section { background:rgba(255,255,255,.6); border:1px solid var(--border); border-radius:22px; padding:18px; margin-bottom:26px; }
+  .cat-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:16px; }
+  .cat-head h3 { display:flex; align-items:center; gap:10px; font-size:21px; font-weight:800; color:var(--ink); }
+  .cat-head h3::before { content:''; width:6px; height:24px; border-radius:6px; background:var(--primary); display:inline-block; }
+  .cat-head h3 small { font-size:12px; font-weight:700; color:var(--primary); background:var(--primary-light); padding:3px 10px; border-radius:999px; }
+  .cat-more { border:1.5px solid var(--primary); background:#fff; color:var(--primary); font-family:inherit; font-size:13px; font-weight:800; padding:8px 16px; border-radius:999px; cursor:pointer; white-space:nowrap; transition:background .15s, color .15s; }
+  .cat-more:hover { background:var(--primary); color:#fff; }
+  @media (max-width:600px) { .cat-section { padding:12px; border-radius:18px; margin-bottom:18px; } .cat-head h3 { font-size:17px; } }
   .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(210px,1fr)); gap:22px; }
   @media (max-width: 600px) {
     .topbar-inner { padding:9px 14px; }
@@ -786,7 +794,7 @@
     }
     document.getElementById('listTitle').textContent = selectedCategory === 'all' ? 'সব পণ্য' : selectedCategory;
     document.getElementById('prodCount').textContent = Number(filtered.length).toLocaleString('bn-BD') + 'টি পণ্য';
-    renderProductGrid(filtered);
+    renderProductGrid(filtered, selectedCategory === 'all' && !query);
   }
 
   // অফার মূল্য থাকলে (এবং আসল দামের চেয়ে কম হলে) সেটাই বিক্রয়মূল্য
@@ -807,7 +815,9 @@
     return '<div class="off-badge">' + Number(pct).toLocaleString('bn-BD') + '% ছাড়</div>';
   }
 
-  function renderProductGrid(products) {
+  const HOME_LIMIT = 5;
+
+  function renderProductGrid(products, grouped) {
     const grid = document.getElementById('productGrid');
     const emptyMsg = document.getElementById('emptyMsg');
     grid.innerHTML = '';
@@ -818,6 +828,56 @@
       return;
     }
     emptyMsg.style.display = 'none';
+
+    if (!grouped) {
+      grid.style.display = '';
+      fillCards(grid, products);
+      animateGrid = false;
+      return;
+    }
+
+    // হোম পেজ: প্রতিটি ক্যাটাগরির আলাদা সেকশন
+    grid.style.display = 'block';
+    const groups = [];
+    const byCat = {};
+    products.forEach(p => {
+      const c = (typeof p.category === 'string' && p.category.trim()) ? p.category : '';
+      if (!byCat[c]) { byCat[c] = []; groups.push(c); }
+      byCat[c].push(p);
+    });
+    // ক্যাটাগরি ছাড়া পণ্য সবার শেষে
+    groups.sort((a, b) => (a === '') - (b === ''));
+
+    groups.forEach(c => {
+      const items = byCat[c];
+      const section = document.createElement('div');
+      section.className = 'cat-section';
+      const head = document.createElement('div');
+      head.className = 'cat-head';
+      const h = document.createElement('h3');
+      h.textContent = c || 'অন্যান্য পণ্য';
+      const cnt = document.createElement('small');
+      cnt.textContent = Number(items.length).toLocaleString('bn-BD') + 'টি';
+      h.appendChild(cnt);
+      head.appendChild(h);
+      if (c && items.length > HOME_LIMIT) {
+        const more = document.createElement('button');
+        more.type = 'button';
+        more.className = 'cat-more';
+        more.textContent = 'সব দেখুন →';
+        more.addEventListener('click', () => { selectCategory(c); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+        head.appendChild(more);
+      }
+      const sub = document.createElement('div');
+      sub.className = 'grid';
+      section.append(head, sub);
+      grid.appendChild(section);
+      fillCards(sub, c ? items.slice(0, HOME_LIMIT) : items);
+    });
+    animateGrid = false;
+  }
+
+  function fillCards(grid, products) {
     const cols = getComputedStyle(grid).gridTemplateColumns.split(' ').length || 1;
     products.forEach((p, idx) => {
       const images = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
@@ -873,7 +933,6 @@
       grid.appendChild(card);
       if (animateGrid && window.observeReveal) window.observeReveal(card);
     });
-    animateGrid = false;
   }
 
   // ---------- Order Tracking ----------
