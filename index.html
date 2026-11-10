@@ -33,7 +33,10 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400;500;600;700;800&family=Bricolage+Grotesque:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400;500;600;700;800&family=Bricolage+Grotesque:wght@600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400;500;600;700;800&family=Bricolage+Grotesque:wght@600;700;800&display=swap" rel="stylesheet"></noscript>
 <!-- ===================== PIXEL CODE START ===================== -->
 <script>
   // Facebook (Meta) Pixel ID এখানে বসান। ফাঁকা থাকলে Pixel চালু হবে না।
@@ -323,6 +326,10 @@
 
   /* Image shimmer + fade-in */
   @keyframes shimmer { to { background-position:-200% 0; } }
+  .sk-card { pointer-events:none; }
+  .sk-line { height:14px; margin:14px 14px 0; border-radius:8px; background:linear-gradient(110deg,#e6eeec 30%,#f4f9f8 50%,#e6eeec 70%); background-size:200% 100%; animation:shimmer 1.4s linear infinite; }
+  .sk-line.s { width:45%; margin-bottom:16px; }
+  .cat-section { content-visibility:auto; contain-intrinsic-size:auto 520px; }
   .card-img { background:linear-gradient(110deg,#e6eeec 30%,#f4f9f8 50%,#e6eeec 70%); background-size:200% 100%; animation:shimmer 1.4s linear infinite; }
   .card-img.loaded { animation:none; }
   .card-img img { opacity:0; transition:opacity .5s ease, transform .4s ease; }
@@ -496,7 +503,7 @@
     </div>
     <div class="alert-bar" id="alertBar" style="display:none;"></div>
     <div class="list-head"><h2 id="listTitle">সব পণ্য</h2><span id="prodCount"></span></div>
-    <div id="productGrid" class="grid"><p id="loadingMsg" class="empty" style="grid-column:1/-1;">পণ্য লোড হচ্ছে...</p></div>
+    <div id="productGrid" class="grid"><p id="loadingMsg" class="empty" style="grid-column:1/-1;">পণ্য লোড হচ্ছে...</p><div class="card sk-card"><div class="card-img" style="aspect-ratio:1/1;"></div><div class="sk-line"></div><div class="sk-line s"></div></div><div class="card sk-card"><div class="card-img" style="aspect-ratio:1/1;"></div><div class="sk-line"></div><div class="sk-line s"></div></div><div class="card sk-card"><div class="card-img" style="aspect-ratio:1/1;"></div><div class="sk-line"></div><div class="sk-line s"></div></div><div class="card sk-card"><div class="card-img" style="aspect-ratio:1/1;"></div><div class="sk-line"></div><div class="sk-line s"></div></div><div class="card sk-card"><div class="card-img" style="aspect-ratio:1/1;"></div><div class="sk-line"></div><div class="sk-line s"></div></div><div class="card sk-card"><div class="card-img" style="aspect-ratio:1/1;"></div><div class="sk-line"></div><div class="sk-line s"></div></div><div class="card sk-card"><div class="card-img" style="aspect-ratio:1/1;"></div><div class="sk-line"></div><div class="sk-line s"></div></div><div class="card sk-card"><div class="card-img" style="aspect-ratio:1/1;"></div><div class="sk-line"></div><div class="sk-line s"></div></div></div>
     <noscript><p class="empty">পণ্য দেখতে ব্রাউজারে JavaScript চালু করুন, অথবা অর্ডারের জন্য আমাদের সাথে সরাসরি যোগাযোগ করুন।</p></noscript>
     <div id="emptyMsg" class="empty" style="display:none;"></div>
   </section>
@@ -656,6 +663,7 @@
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  try { db.enablePersistence({ synchronizeTabs: true }).catch(function () {}); } catch (e) {}
 
   // ⚠️ Order Manager অ্যাপের Firebase প্রজেক্ট — অর্ডার এলে সেখানেও পাঠানো হবে
   const orderManagerConfig = {
@@ -684,6 +692,8 @@
       let i = 0;
       snap.forEach(doc => {
         const img = document.createElement('img');
+        img.decoding = 'async';
+        if (i === 0) { img.setAttribute('fetchpriority', 'high'); } else { img.loading = 'lazy'; }
         img.src = doc.data().image;
         track.appendChild(img);
         const dot = document.createElement('span');
@@ -719,6 +729,14 @@
   let animateGrid = true;
 
   function loadProducts() {
+    // দ্রুত প্রথম দেখা: সর্বশেষ ১২টা পণ্য আগে দেখানো, পুরো তালিকা আসলে নিজে থেকে বদলে যাবে
+    db.collection('products').orderBy('createdAt', 'desc').limit(12).get().then(snap => {
+      if (productsLoaded || snap.empty) return;
+      allProducts = [];
+      snap.forEach(doc => { allProducts.push({ id: doc.id, ...doc.data() }); });
+      updateCategoryUI();
+      applyFilters();
+    }).catch(() => {});
     db.collection('products').orderBy('createdAt', 'desc').onSnapshot(snap => {
       allProducts = [];
       snap.forEach(doc => {
@@ -892,6 +910,8 @@
       const imageBox = document.createElement('div');
       imageBox.className = 'card-img';
       const img = document.createElement('img');
+      img.decoding = 'async';
+      if (idx >= 4) img.loading = 'lazy';
       img.src = thumb;
       img.alt = p.name || 'পণ্য';
       img.addEventListener('click', () => openProductDetail(p.id));
@@ -1855,6 +1875,7 @@
   if (!sid) { sid = Date.now().toString(36) + Math.random().toString(36).slice(2, 8); sSet('sessionStorage', 'ac_sid', sid); }
 
   /* ---- ভিজিট গণনা (প্রতি সেশনে ১ ভিজিট, প্রতিদিন প্রতি ব্রাউজারে ১ ইউনিক ভিজিটর) ---- */
+  setTimeout(function () {
   if (newSession || newVisitorToday) {
     sSet('sessionStorage', 'ac_sess', '1');
     sSet('localStorage', 'ac_vday', today);
@@ -1867,13 +1888,14 @@
       batch.commit().catch(() => {});
     } catch (e) {}
   }
+  }, 3000);
 
   /* ---- লাইভ অনলাইন (ট্যাব খোলা ও দেখা অবস্থায় ৪৫ সেকেন্ডে একবার সাড়া) ---- */
   const ref = db.collection('presence').doc(sid);
   function beat() {
     if (document.visibilityState === 'visible') ref.set({ lastSeen: Date.now() }).catch(() => {});
   }
-  beat();
+  setTimeout(beat, 3000);
   setInterval(beat, 45000);
   document.addEventListener('visibilitychange', beat);
   addEventListener('pageshow', beat);
